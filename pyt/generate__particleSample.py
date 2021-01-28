@@ -9,7 +9,7 @@ def generate__particleSample():
 
 
     npt         = 11
-    beta        = 0.1
+    beta        = 0.01
     cv          = 3.e8
     v0          = beta * cv
 
@@ -24,9 +24,9 @@ def generate__particleSample():
     Data[:,xp_] = 0.0
     Data[:,yp_] = np.linspace( 0.0, -0.4, 11 )
     Data[:,zp_] = 0.0
-    Data[:,vx_] = - v0
+    Data[:,vx_] = 0.0
     Data[:,vy_] = 0.0
-    Data[:,vz_] = 0.0
+    Data[:,vz_] = + v0
     
     # ------------------------------------------------- #
     # --- [2] save in outFile                       --- #

@@ -14,17 +14,22 @@ module variablesMod
   double precision, allocatable :: pxv(:,:)
 
   integer         , allocatable :: nbuff_save(:)
+  integer         , allocatable :: period_counter(:)
   double precision, allocatable :: pxvbuff(:,:,:)
 
   
   character(cLen)               :: EFieldFile, type__EFieldFile
   character(cLen)               :: BFieldFile, type__BFieldFile
+  character(cLen)               :: popoutFile
   character(cLen)               :: particleFile
   character(cLen)               :: trackFileBase
-  character(cLen)               :: popoutFile
 
   logical                       :: flag__EField
   logical                       :: flag__BField
+  logical                       :: flag__cyclicCoordinate
+
+  character(cLen)               :: FieldBoundary__x, FieldBoundary__y, FieldBoundary__z
+  character(cLen)               :: particleBoundary__x, particleBoundary__y, particleBoundary__z
 
   double precision              :: qm
   double precision              :: dt, dx, dy, dz, dxInv, dyInv, dzInv

@@ -23,6 +23,15 @@ contains
 
     read(lun,*)  cmt, cmt, flag__EField
     read(lun,*)  cmt, cmt, flag__BField
+    read(lun,*)  cmt, cmt, flag__cyclicCoordinate
+    
+    read(lun,char_fmt)  cmt, cmt, FieldBoundary__x
+    read(lun,char_fmt)  cmt, cmt, FieldBoundary__y
+    read(lun,char_fmt)  cmt, cmt, FieldBoundary__z
+    
+    read(lun,char_fmt)  cmt, cmt, particleBoundary__x
+    read(lun,char_fmt)  cmt, cmt, particleBoundary__y
+    read(lun,char_fmt)  cmt, cmt, particleBoundary__z
 
     read(lun,*)  cmt, cmt, LI
     read(lun,*)  cmt, cmt, LJ
@@ -141,7 +150,7 @@ contains
           stop
        endif
        if ( .not.( allocated( EBf ) ) ) then
-          allocate( EBf(6,LI,LJ,LK) )
+          allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
        endif
        do k=1, LK
           do j=1, LJ
@@ -204,7 +213,7 @@ contains
           stop
        endif
        if ( .not.( allocated( EBf ) ) ) then
-          allocate( EBf(6,LI,LJ,LK) )
+          allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
        endif
        do k=1, LK
           do j=1, LJ
@@ -283,6 +292,37 @@ contains
              nbuff_save(ipt)              = nbuff_save(ipt) + 1
           endif
        enddo
+       ! -- cyclic coordinate output -- !
+       if ( flag__cyclicCoordinate ) then
+          ! -- cyclic particle coordinate [xMin,xMax] -- !
+          ! -- nothing to do -- !
+       else 
+          if ( trim(particleBoundary__x).eq."periodic" ) then
+             do ipt=1, npt
+                if ( pxv(wt_,ipt).gt.0.d0 ) then
+                   pxvbuff(xp_+1,ipt,buff_count) = pxvbuff(xp_+1,ipt,buff_count) &
+                        &                        + dble( period_counter(ipt) )*xLeng
+                endif
+             enddo
+          endif
+          if ( trim(particleBoundary__y).eq."periodic" ) then
+             do ipt=1, npt
+                if ( pxv(wt_,ipt).gt.0.d0 ) then
+                   pxvbuff(yp_+1,ipt,buff_count) = pxvbuff(yp_+1,ipt,buff_count) &
+                        &                        + dble( period_counter(ipt) )*yLeng
+                endif
+             enddo
+          endif
+          if ( trim(particleBoundary__z).eq."periodic" ) then
+             do ipt=1, npt
+                if ( pxv(wt_,ipt).gt.0.d0 ) then
+                   pxvbuff(zp_+1,ipt,buff_count) = pxvbuff(zp_+1,ipt,buff_count) &
+                        &                        + dble( period_counter(ipt) )*zLeng
+                endif
+             enddo
+          endif
+       endif
+       ! ------------------------------ !
     endif
 
     ! ------------------------------------------------------ !

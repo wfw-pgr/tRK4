@@ -9,7 +9,8 @@ def generate__eFieldSample():
     x_,y_,z_    = 0, 1, 2
     vx_,vy_,vz_ = 0, 1, 2
 
-    EField_strength = 1.0e5
+    EField_strength = 0.0
+    # EField_strength = 1.0e5
     
     # ------------------------------------------------- #
     # --- [1] load config File                      --- #

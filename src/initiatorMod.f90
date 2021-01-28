@@ -31,9 +31,41 @@ contains
     ! --- [3] initialization of time sequence            --- !
     ! ------------------------------------------------------ !
     ptime = t_simuStart
+
+
+    ! ------------------------------------------------------ !
+    ! --- [4] display variables                          --- !
+    ! ------------------------------------------------------ !
+    
+    write(6,"(a)"            ) "[initialize__variables]    ========  [initialized variables   ]  ======== "
+    write(6,"(a,18x,a,e15.8)") "qm"   ,  " :: ", qm
+    write(6,"(a,15x,a,e15.8)") "xLeng",  " :: ", xLeng
+    write(6,"(a,15x,a,e15.8)") "yLeng",  " :: ", yLeng
+    write(6,"(a,15x,a,e15.8)") "zLeng",  " :: ", zLeng
+    write(6,"(a,18x,a,e15.8)") "dx"   ,  " :: ", dx
+    write(6,"(a,18x,a,e15.8)") "dy"   ,  " :: ", dy
+    write(6,"(a,18x,a,e15.8)") "dz"   ,  " :: ", dz
+    write(6,"(a,15x,a,e15.8)") "dxInv",  " :: ", dxInv
+    write(6,"(a,15x,a,e15.8)") "dyInv",  " :: ", dyInv
+    write(6,"(a,15x,a,e15.8)") "dzInv",  " :: ", dzInv
+    write(6,"(a)"            ) "[initialize__variables]    ============================================== "    
     
     return
   end subroutine initialize__variables
+
+
+  ! ====================================================== !
+  ! === initialize periodic field condition            === !
+  ! ====================================================== !
+  subroutine initialize__periodicField
+    use variablesMod
+    implicit none
+
+    allocate( period_counter(npt) )
+    period_counter(:) = 0
+    write(6,"(a)") "[initialize__periodicField] initilizing period_counter... [Done]"
+    return
+  end subroutine initialize__periodicField
 
 
   ! ====================================================== !
@@ -67,7 +99,7 @@ contains
        dt_wci = alpha_wci * ( twopi * Mp ) / ( qe * maxB )
     else
        if ( ( trim( type__dt ).eq."wci_" ).or.( trim(type__dt).eq."mix_" ) ) then
-          write(6,*) "[Determination__DT] No BField File, but dt is given by [ wci_ / mix_ ] mode " 
+          write(6,"(a)") "[Determination__DT] No BField File, but dt is given by [ wci_ / mix_ ] mode " 
           stop
        endif
        dt_wci = 10.d0 * dt_CFL
@@ -83,22 +115,22 @@ contains
     else if ( trim(type__dt).eq."load" ) then
        ! -- nothing -- !
     else
-       write(6,*) "[Determination__DT] incompatible type__dt [ERROR] "
+       write(6,"(a)") "[Determination__DT] incompatible type__dt [ERROR] "
        stop
     endif
     
     ! ------------------------------------------------------ !
     ! --- [2] Display of dt                              --- !
     ! ------------------------------------------------------ !
-    write(6,*)
-    write(6,*) "[Determination__DT]        ========  [Determination of   DT   ]  ======== "
-    write(6,*) "[Determination__DT]          :        type__dt == ", trim(type__dt)
-    write(6,*) "[Determination__DT]          :        dt_wci   == ", dt_wci
-    write(6,*) "[Determination__DT]          :        dt_CFL   == ", dt_CFL
-    write(6,*) "[Determination__DT]         --------------------------------------- "
-    write(6,*) "[Determination__DT]          :            DT   == ", dt
-    write(6,*) "[Determination__DT]        ============================================== "
-    write(6,*)
+    write(6,"(a)"      )
+    write(6,"(a)"      ) "[Determination__DT]        ========  [Determination of   DT   ]  ======== "
+    write(6,"(a,a)"    ) "[Determination__DT]          :        type__dt == ", trim(type__dt)
+    write(6,"(a,e15.8)") "[Determination__DT]          :        dt_wci   == ", dt_wci
+    write(6,"(a,e15.8)") "[Determination__DT]          :        dt_CFL   == ", dt_CFL
+    write(6,"(a)"      ) "[Determination__DT]         --------------------------------------- "
+    write(6,"(a,e15.8)") "[Determination__DT]          :            DT   == ", dt
+    write(6,"(a)"      ) "[Determination__DT]        ============================================== "
+    write(6,"(a)"      )
     
     return
   end subroutine Determination__DT
@@ -112,20 +144,20 @@ contains
     implicit none
 
     if      ( trim(type__iterMax).eq."load" ) then
-       ! -- nothing -- !
+       t_simuEnd = t_simuStart + dt*iterMax
     else if ( trim(type__iterMax).eq."Auto" ) then
        iterMax = ceiling( ( t_simuEnd - t_simuStart ) / dt )
     else
-       write(6,*) "[Determination__iterMax] incompatible type__iterMax [ERROR] "
+       write(6,"(a)") "[Determination__iterMax] incompatible type__iterMax [ERROR] "
        stop
     endif
        
-    write(6,*)
-    write(6,*) "[Determination__iterMax]   ========  [Determination of iterMax] ======== "
-    write(6,*) "[Determination__iterMax]     : type__iterMax   == ", trim(type__iterMax)
-    write(6,*) "[Determination__iterMax]     :       iterMax   == ", iterMax
-    write(6,*) "[Determination__iterMax]   ============================================= "
-    write(6,*)
+    write(6,"(a)"    )
+    write(6,"(a)"    ) "[Determination__iterMax]   ========  [Determination of iterMax] ======== "
+    write(6,"(a,a)"  ) "[Determination__iterMax]     : type__iterMax   == ", trim(type__iterMax)
+    write(6,"(a,i10)") "[Determination__iterMax]     :       iterMax   == ", iterMax
+    write(6,"(a)"    ) "[Determination__iterMax]   ============================================= "
+    write(6,"(a)"    )
     return
   end subroutine 
 

@@ -9,7 +9,7 @@ def generate__bFieldSample():
     x_,y_,z_    = 0, 1, 2
     vx_,vy_,vz_ = 0, 1, 2
     
-    BField_strength = 1.0
+    BField_strength = 0.0
     
     # ------------------------------------------------- #
     # --- [1] load config File                      --- #
@@ -31,7 +31,7 @@ def generate__bFieldSample():
     ret         = esg.equiSpaceGrid( x1MinMaxNum=x1MinMaxNum, x2MinMaxNum=x2MinMaxNum, \
                                      x3MinMaxNum=x3MinMaxNum, returnType = "structured" )
     bfield          = np.zeros_like( ( ret ) )
-    bfield[...,vz_] = BField_strength
+    bfield[...,vy_] = BField_strength
 
     Data            = np.concatenate( (ret,bfield), axis=3 )
     

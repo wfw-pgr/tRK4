@@ -6,6 +6,8 @@ object  = \
   ioUtilityMod.o \
   initiatorMod.o \
   rkgSolverMod.o \
+  pBoundaryMod.o \
+  fBoundaryMod.o \
   main.o
 
 FC = gfortran
