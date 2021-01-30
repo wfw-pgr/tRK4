@@ -8,13 +8,16 @@ import matplotlib.cm               as cm
 
 
 # ========================================================= #
-# ===  draw trajectory__tx                              === #
+# ===  draw time evolution of particle                  === #
 # ========================================================= #
 
-def trajectory__tx( nums=None, axis=None ):
+def time_vs_probeData( nums=None, axis=None ):
 
-    t_         = 0
-    x_, y_, z_ = 1, 2, 3
+    t_            =  0
+    x_ , y_ , z_  =  1,  2,  3
+    vx_, vy_, vz_ =  4,  5,  6
+    ex_, ey_, ez_ =  7,  8,  9
+    bx_, by_, bz_ = 10, 11, 12
     
     # ------------------------------------------------- #
     # --- [1] Arguments                             --- #
@@ -28,11 +31,12 @@ def trajectory__tx( nums=None, axis=None ):
         print( "[trajectory__tx] please input axis ( x/y/z )  >> ( e.g. :: x     )" )
         axis = input()
         
-    if ( not( axis.lower() in ["x","y","z"] ) ):
+    if ( not( axis.lower() in ["x" ,"y" ,"z" ,"vx","vy","vz",\
+                               "ex","ey","ez","bx","by","bz"] ) ):
         print( "[trajectory__tx] axis != x/y/z   [ERROR] " )
         sys.exit()
 
-    pngFile = "png/trajectory__time_{0}.png".format( axis )
+    pngFile = "png/time_vs_{0}.png".format( axis )
     config  = lcf.load__config()
 
     # ------------------------------------------------- #
@@ -40,13 +44,40 @@ def trajectory__tx( nums=None, axis=None ):
     # ------------------------------------------------- #
     if   ( axis.lower() == "x" ):
         p_     = x_
-        yTitle = "X (m)"
+        yTitle = "x (m)"
     elif ( axis.lower() == "y" ):
         p_     = y_
-        yTitle = "Y (m)"
+        yTitle = "y (m)"
     elif ( axis.lower() == "z" ):
         p_     = z_
-        yTitle = "Z (m)"
+        yTitle = "z (m)"
+    elif ( axis.lower() == "vx" ):
+        p_     = vx_
+        yTitle = "vx (m/s)"
+    elif ( axis.lower() == "vy" ):
+        p_     = vy_
+        yTitle = "vy (m/s)"
+    elif ( axis.lower() == "vz" ):
+        p_     = vz_
+        yTitle = "vz (m/s)"
+    elif ( axis.lower() == "ex" ):
+        p_     = ex_
+        yTitle = "ex (V/m)"
+    elif ( axis.lower() == "ey" ):
+        p_     = ey_
+        yTitle = "ey (V/m)"
+    elif ( axis.lower() == "ez" ):
+        p_     = ez_
+        yTitle = "ez (V/m)"
+    elif ( axis.lower() == "bx" ):
+        p_     = bx_
+        yTitle = "bx (T)"
+    elif ( axis.lower() == "by" ):
+        p_     = by_
+        yTitle = "by (T)"
+    elif ( axis.lower() == "bz" ):
+        p_     = bz_
+        yTitle = "bz (T)"
 
     # ------------------------------------------------- #
     # --- [3] config Settings                       --- #
@@ -61,7 +92,7 @@ def trajectory__tx( nums=None, axis=None ):
     config["plt_linewidth"]  = 1.0
     config["xMajor_Nticks"]  = 5
     config["yMajor_Nticks"]  = 5
-    config["plt_marker"]     = "o"
+    config["plt_marker"]     = None
     
     import nkUtilities.generate__colors as col
     colors = col.generate__colors( nColors=len(nums) )
@@ -72,7 +103,8 @@ def trajectory__tx( nums=None, axis=None ):
     # ------------------------------------------------- #
     fig    = pl1.plot1D( config=config, pngFile=pngFile )
     for ik,num in enumerate( nums ):
-        inpFile = "trk/track{0:06}.dat".format( num )
+        # inpFile = "trk/track{0:06}.dat".format( num )
+        inpFile = "prb/probe{0:06}.dat".format( num )
         Data    = lpf.load__pointFile( inpFile=inpFile, returnType="point" )
         xAxis   = Data[:,t_]
         yAxis   = Data[:,p_]
@@ -89,4 +121,10 @@ if ( __name__=="__main__" ):
     import nkUtilities.genArgs as gar
     args = gar.genArgs()
     nums = args["array"]
-    trajectory__tx( nums=nums, axis=args["key"] )
+    axis = args["key"]
+    
+    if ( axis == "all" ):
+        for ax in ["x","y","z","vx","vy","vz","ex","ey","ez","bx","by","bz"]:
+            time_vs_probeData( nums=nums, axis=ax )
+    else:
+        time_vs_probeData( nums=nums, axis=axis )

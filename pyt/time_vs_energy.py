@@ -1,6 +1,7 @@
 import sys
 import numpy                       as np
 import nkUtilities.load__config    as lcf
+import nkUtilities.load__constants as lcn
 import nkUtilities.load__pointFile as lpf
 import nkUtilities.plot1D          as pl1
 import nkUtilities.configSettings  as cfs
@@ -8,62 +9,37 @@ import matplotlib.cm               as cm
 
 
 # ========================================================= #
-# ===  draw trajectory__xy                              === #
+# ===  draw time evolution of particle Energy           === #
 # ========================================================= #
 
-def trajectory__xy( nums=None, plain=None ):
+def time_vs_energy( nums=None ):
 
-    x_, y_, z_ = 1, 2, 3
+    t_            =  0
+    x_ , y_ , z_  =  1,  2,  3
+    vx_, vy_, vz_ =  4,  5,  6
+    ex_, ey_, ez_ =  7,  8,  9
+    bx_, by_, bz_ = 10, 11, 12
     
     # ------------------------------------------------- #
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
     if ( nums is None ):
-        print( "[trajectory__tx] please input particle number            >> ( e.g. :: 1 2 3 )" )
+        print( "[time_vs_energy] please input particle number >> ( e.g. :: 1 2 3 )" )
         nums = input()
         nums = [ int(num) for num in nums.split() ]
-
-    if ( plain is None ):
-        print( "[trajectory__tx] please input plain (xy/yx/yz/zy/zx/xz/) >> ( e.g. :: xy    )" )
-        plain = input()
         
-    if ( not( plain.lower() in ["xy","yz","zx","yx","zy","xz"] ) ):
-        print( "[trajectory__tx] plain != (xy/yx/yz/zy/zx/xz/)  [ERROR] " )
-        sys.exit()
+    pngFile = "png/time_vs_energy.png"
+    config  = lcf.load__config()
 
-    pngFile = "png/trajectory__{0}.png".format( plain )
-    config  = lcf.load__config()    
+    cnsFile = "dat/parameter.conf"
+    const   = lcn.load__constants( inpFile=cnsFile )
 
     # ------------------------------------------------- #
-    # --- [2] axis settings                         --- #
-    # ------------------------------------------------- #
-
-    if   ( plain.lower() == "xy" ):
-        a1_, a2_      = x_, y_
-        xTitle,yTitle = "X (m)", "Y (m)"
-    elif ( plain.lower() == "yx" ):
-        a1_, a2_      = y_, x_
-        xTitle,yTitle = "Y (m)", "X (m)"
-    elif ( plain.lower() == "yz" ):
-        a1_, a2_      = y_, z_
-        xTitle,yTitle = "Y (m)", "Z (m)"
-    elif ( plain.lower() == "zy" ):
-        a1_, a2_      = z_, y_
-        xTitle,yTitle = "Z (m)", "Y (m)"
-    elif ( plain.lower() == "zx" ):
-        a1_, a2_      = z_, x_
-        xTitle,yTitle = "Z (m)", "X (m)"
-    elif ( plain.lower() == "xz" ):
-        a1_, a2_      = x_, z_
-        xTitle,yTitle = "X (m)", "Z (m)"
-
-        
-    # ------------------------------------------------- #
-    # --- [3] config Settings                       --- #
+    # --- [2] config Settings                       --- #
     # ------------------------------------------------- #
     cfs.configSettings( configType="plot1D_def", config=config )
-    config["xTitle"]         = xTitle
-    config["yTitle"]         = yTitle
+    config["xTitle"]         = "Time (s)"
+    config["yTitle"]         = "Energy (MeV)"
     config["plt_xAutoRange"] = True
     config["plt_yAutoRange"] = True
     config["plt_xRange"]     = [-5.0,+5.0]
@@ -71,7 +47,8 @@ def trajectory__xy( nums=None, plain=None ):
     config["plt_linewidth"]  = 1.0
     config["xMajor_Nticks"]  = 5
     config["yMajor_Nticks"]  = 5
-
+    config["plt_marker"]     = None
+    
     import nkUtilities.generate__colors as col
     colors = col.generate__colors( nColors=len(nums) )
     
@@ -80,11 +57,13 @@ def trajectory__xy( nums=None, plain=None ):
     # ------------------------------------------------- #
     fig    = pl1.plot1D( config=config, pngFile=pngFile )
     for ik,num in enumerate( nums ):
-        # inpFile = "trk/track{0:06}.dat".format( num )
         inpFile = "prb/probe{0:06}.dat".format( num )
         Data    = lpf.load__pointFile( inpFile=inpFile, returnType="point" )
-        xAxis   = Data[:,a1_]
-        yAxis   = Data[:,a2_]
+        xAxis   = Data[:,t_]
+        beta    = np.sqrt( Data[:,vx_]**2 + Data[:,vy_]**2 + Data[:,vz_]**2 ) / const["cv"]
+        gamma   = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
+        yAxis   = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / const["qe"] / 1.e6
+
         fig.add__plot( xAxis=xAxis, yAxis=yAxis, color=colors[ik] )
     fig.set__axis()
     fig.save__figure()
@@ -96,7 +75,6 @@ def trajectory__xy( nums=None, plain=None ):
 
 if ( __name__=="__main__" ):
     import nkUtilities.genArgs as gar
-    args  = gar.genArgs()
-    nums  = args["array"]
-    plain = args["key"]
-    trajectory__xy( nums=nums, plain=plain )
+    args = gar.genArgs()
+    nums = args["array"]
+    time_vs_energy( nums=nums )

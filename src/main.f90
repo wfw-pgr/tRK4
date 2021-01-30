@@ -4,8 +4,10 @@ program main
   use initiatorMod
   use utilitiesMod
   use rkgSolverMod
+  use ebfSolverMod
   use pBoundaryMod
   use fBoundaryMod
+  use diagnosisMod
   implicit none
   integer :: i, j, k
   
@@ -18,15 +20,20 @@ program main
   call load__configFile
   call initialize__variables
 
+  if ( flag__travellingWave ) then
+     call load__twEigenMode
+  endif
   if ( flag__EField ) call load__EFieldFile
   if ( flag__BField ) call load__BFieldFile
-
+  
   call Field__Boundary
 
   
   call load__particles
-  call save__particles( "initi" )
-
+  call into__relativistic
+  if ( flag__saveParticle ) call save__particles  ( "initi" )
+  if ( flag__probeField   ) call probe__eulerField( "initi" )
+     
   call Determination__DT
   call Determination__iterMax
 
@@ -49,13 +56,21 @@ program main
      ptime = ptime + dt
      call show__progressBar( iter, iterMax )
 
-     !  -- [2-2] step forward particle info.           --  !
+     !  -- [2-2] field solver                          --  !
+     if ( flag__travellingWave ) then
+        call modulate__twEigenMode
+     endif
+
+     !  -- [2-3] step forward particle info.           --  !
      call RK4__tracker
      call particle__Boundary
 
-     !  -- [2-3] save particle information             --  !
-     if ( ptime.gt.t_nextSave ) then
+     !  -- [2-4] save particle information             --  !
+     if ( ( flag__saveParticle ).and.( ptime.gt.t_nextSave  ) ) then
         call save__particles( "store" )
+     endif
+     if ( ( flag__probeField   ).and.( ptime.gt.t_nextProbe ) ) then
+        call probe__eulerField( "store" )
      endif
   enddo
   write(6,"(a)")
@@ -67,7 +82,10 @@ program main
   ! ------------------------------------------------------ !
   ! --- [3] End of Program                             --- !
   ! ------------------------------------------------------ !
-  call save__particles( "final" )
+  
+  if ( flag__saveParticle ) call save__particles  ( "final" )
+  if ( flag__probeField   ) call probe__eulerField( "final" )
+
   call show__endLogo  
   deallocate( EBf, pxv )
 

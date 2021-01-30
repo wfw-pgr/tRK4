@@ -5,9 +5,11 @@ object  = \
   shapeFuncMod.o \
   ioUtilityMod.o \
   initiatorMod.o \
-  rkgSolverMod.o \
   pBoundaryMod.o \
   fBoundaryMod.o \
+  rkgSolverMod.o \
+  ebfSolverMod.o \
+  diagnosisMod.o \
   main.o
 
 FC = gfortran

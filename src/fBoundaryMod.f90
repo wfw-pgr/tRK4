@@ -56,7 +56,9 @@ contains
        EBf(:,LI+1,:,:) = EBf(:,LI,:,:)
        EBf(:,LI+2,:,:) = EBf(:,LI,:,:)
        EBf(:,LI+3,:,:) = EBf(:,LI,:,:)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: Neumann "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: Neumann "
+       endif
     endif
 
     if ( boundary.eq."y" ) then
@@ -68,7 +70,9 @@ contains
        EBf(:,:,LJ+1,:) = EBf(:,:,LJ,:)
        EBf(:,:,LJ+2,:) = EBf(:,:,LJ,:)
        EBf(:,:,LJ+3,:) = EBf(:,:,LJ,:)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: Neumann "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: Neumann "
+       endif
     endif
 
     if ( boundary.eq."z" ) then
@@ -80,7 +84,9 @@ contains
        EBf(:,:,:,LK+1) = EBf(:,:,:,LK)
        EBf(:,:,:,LK+2) = EBf(:,:,:,LK)
        EBf(:,:,:,LK+3) = EBf(:,:,:,LK)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: Neumann "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: Neumann "
+       endif
     endif
     return
   end subroutine fBoundary__Neumann
@@ -102,7 +108,9 @@ contains
        EBf(:,LI+1,:,:) = EBf(:,   1,:,:)
        EBf(:,LI+2,:,:) = EBf(:,   2,:,:)
        EBf(:,LI+3,:,:) = EBf(:,   3,:,:)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: periodic "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: periodic "
+       endif
     endif
 
     if ( boundary.eq."y" ) then
@@ -114,7 +122,9 @@ contains
        EBf(:,:,LJ+1,:) = EBf(:,:,   1,:)
        EBf(:,:,LJ+2,:) = EBf(:,:,   2,:)
        EBf(:,:,LJ+3,:) = EBf(:,:,   3,:)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: periodic "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: periodic "
+       endif
     endif
 
     if ( boundary.eq."z" ) then
@@ -126,7 +136,9 @@ contains
        EBf(:,:,:,LK+1) = EBf(:,:,:,   1)
        EBf(:,:,:,LK+2) = EBf(:,:,:,   2)
        EBf(:,:,:,LK+3) = EBf(:,:,:,   3)
-       write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: periodic "
+       if ( flag__BoundaryMessage ) then
+          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: periodic "
+       endif
     endif
     return
   end subroutine fBoundary__periodic

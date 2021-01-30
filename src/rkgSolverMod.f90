@@ -27,19 +27,19 @@ contains
        pxv(xo_:uz_,ipt) = pxv(xp_:vz_,ipt)
 
        ! -- [1-2] 1st step           -- !
-       kx1 = pxv(vx_:vz_,ipt)
-       kv1 = rhs_vp( pxv(xp_:zp_,ipt), pxv(vx_:vz_,ipt) )
+       kx1 = rhs_xp(                           pxv(vx_:vz_,ipt)         )
+       kv1 = rhs_vp( pxv(xp_:zp_,ipt)        , pxv(vx_:vz_,ipt)         )
 
        ! -- [1-3] 2nd step           -- !
-       kx2 = pxv(vx_:vz_,ipt) + hdt*kv1
+       kx2 = rhs_xp(                           pxv(vx_:vz_,ipt)+hdt*kv1 )
        kv2 = rhs_vp( pxv(xp_:zp_,ipt)+hdt*kx1, pxv(vx_:vz_,ipt)+hdt*kv1 )
 
        ! -- [1-4] 3rd step           -- !
-       kx3 = pxv(vx_:vz_,ipt) + hdt*kv2
+       kx3 = rhs_xp(                           pxv(vx_:vz_,ipt)+hdt*kv2 )
        kv3 = rhs_vp( pxv(xp_:zp_,ipt)+hdt*kx2, pxv(vx_:vz_,ipt)+hdt*kv2 )
 
        ! -- [1-5] 4th step           -- !
-       kx4 = pxv(vx_:vz_,ipt) + dt*kv3
+       kx4 = rhs_xp(                           pxv(vx_:vz_,ipt)+ dt*kv3 )
        kv4 = rhs_vp( pxv(xp_:zp_,ipt)+ dt*kx3, pxv(vx_:vz_,ipt)+ dt*kv3 )
 
        ! -- [1-6] actual step        -- !
@@ -52,9 +52,27 @@ contains
   end subroutine RK4__tracker
     
 
-
   ! ====================================================== !
   ! === Left-Hand-Side to be integrated (xp)           === !
+  ! ====================================================== !
+  function rhs_xp( vp )
+    use variablesMod
+    implicit none
+    double precision, intent(in) :: vp(3)
+    double precision             :: rhs_xp(3)
+    double precision             :: gammaInv
+    integer         , parameter  :: vxh_=1, vyh_=2, vzh_=3
+    
+    gammaInv     = 1.d0 / sqrt( 1.d0 + ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
+    rhs_xp(vxh_) = vp(vxh_) * gammaInv
+    rhs_xp(vyh_) = vp(vyh_) * gammaInv
+    rhs_xp(vzh_) = vp(vzh_) * gammaInv
+    return
+  end function rhs_xp
+    
+
+  ! ====================================================== !
+  ! === Left-Hand-Side to be integrated (vp)           === !
   ! ====================================================== !
   function rhs_vp( xp, vp )
     use variablesMod
@@ -65,7 +83,6 @@ contains
     integer                      :: i, j, k, ip, jp, kp
     double precision             :: gammaInv
     double precision             :: rposit(3), EBp(6), sfx(-2:2), sfy(-2:2), sfz(-2:2)
-    double precision, parameter  :: cvSqInv = 1.d0 / cv**2
     integer         , parameter  :: vxh_=1, vyh_=2, vzh_=3
     
     ! ------------------------------------------------------ !
@@ -94,13 +111,86 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] calculate L.H.S.                           --- !
     ! ------------------------------------------------------ !
-    gammaInv     = sqrt( 1.d0 - ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
-    rhs_vp(vxh_) = ( EBp(ex_) + ( vp(vyh_)*EBp(bz_) - vp(vzh_)*EBp(by_) ) ) * qm * gammaInv
-    rhs_vp(vyh_) = ( EBp(ey_) + ( vp(vzh_)*EBp(bx_) - vp(vxh_)*EBp(bz_) ) ) * qm * gammaInv
-    rhs_vp(vzh_) = ( EBp(ez_) + ( vp(vxh_)*EBp(by_) - vp(vyh_)*EBp(bx_) ) ) * qm * gammaInv
+    gammaInv     = sqrt( 1.d0 * ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
+    rhs_vp(vxh_) = qm * ( EBp(ex_) + gammaInv*( vp(vyh_)*EBp(bz_) - vp(vzh_)*EBp(by_) ) )
+    rhs_vp(vyh_) = qm * ( EBp(ey_) + gammaInv*( vp(vzh_)*EBp(bx_) - vp(vxh_)*EBp(bz_) ) )
+    rhs_vp(vzh_) = qm * ( EBp(ez_) + gammaInv*( vp(vxh_)*EBp(by_) - vp(vyh_)*EBp(bx_) ) )
 
     return
   end function rhs_vp
 
 
+  ! ====================================================== !
+  ! === convert into relativistic velocity             === !
+  ! ====================================================== !
+  subroutine into__relativistic
+    use variablesMod
+    implicit none
+    integer                     :: ipt
+    double precision            :: gamma
+
+    ! ------------------------------------------------------ !
+    ! --- [0] check velocity flag                        --- !
+    ! ------------------------------------------------------ !
+    if ( flag__relativisticVelocity ) then 
+       write(6,*) "[into__relativistic] pxv(vx_:vz_) is already relativistic [ERROR]"
+       stop
+    else
+       ! -- ok! nothing to do -- !
+    endif
+    ! ------------------------------------------------------ !
+    ! --- [1] convert velocity into relativistic         --- !
+    ! ------------------------------------------------------ !
+    do ipt=1, npt
+       gamma        = 1.d0 / sqrt( 1.d0 - &
+            & cvSqInv*( pxv(vx_,ipt)**2 + pxv(vy_,ipt)**2 + pxv(vz_,ipt)**2 ) )
+       pxv(vx_,ipt) = gamma * pxv(vx_,ipt)
+       pxv(vy_,ipt) = gamma * pxv(vy_,ipt)
+       pxv(vz_,ipt) = gamma * pxv(vz_,ipt)
+    enddo
+    ! ------------------------------------------------------ !
+    ! --- [2] switch relativistic flag                   --- !
+    ! ------------------------------------------------------ !
+    flag__relativisticVelocity = .true.
+    
+    return
+  end subroutine into__relativistic
+
+
+  ! ====================================================== !
+  ! === convert into non relativistic velocity         === !
+  ! ====================================================== !
+  subroutine into__non_relativistic
+    use variablesMod
+    implicit none
+    integer                     :: ipt
+    double precision            :: gamma
+
+    ! ------------------------------------------------------ !
+    ! --- [0] check velocity flag                        --- !
+    ! ------------------------------------------------------ !
+    if ( flag__relativisticVelocity ) then
+       ! -- ok! nothing to do -- !
+    else
+       write(6,*) "[into__non_relativistic] pxv(vx_:vz_) is already non relativistic [ERROR]"
+       stop
+    endif
+    ! ------------------------------------------------------ !
+    ! --- [1] convert velocity into relativistic         --- !
+    ! ------------------------------------------------------ !
+    do ipt=1, npt
+       gamma = sqrt( 1.d0 + cvSqInv*( pxv(vx_,ipt)**2 + pxv(vy_,ipt)**2 + pxv(vz_,ipt)**2 ) )
+       pxv(vx_,ipt) = pxv(vx_,ipt) / gamma
+       pxv(vy_,ipt) = pxv(vy_,ipt) / gamma
+       pxv(vz_,ipt) = pxv(vz_,ipt) / gamma
+    enddo
+    ! ------------------------------------------------------ !
+    ! --- [2] switch relativistic flag                   --- !
+    ! ------------------------------------------------------ !
+    flag__relativisticVelocity = .false.
+    
+    return
+  end subroutine into__non_relativistic
+  
+  
 end module rkgSolverMod
