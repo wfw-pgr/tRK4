@@ -4,11 +4,11 @@ object  = \
   utilitiesMod.o \
   shapeFuncMod.o \
   ioUtilityMod.o \
-  initiatorMod.o \
   pBoundaryMod.o \
   fBoundaryMod.o \
   rkgSolverMod.o \
   ebfSolverMod.o \
+  initiatorMod.o \
   diagnosisMod.o \
   main.o
 

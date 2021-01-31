@@ -10,15 +10,17 @@ contains
     character(cLen)          :: cmt
     character(17), parameter :: char_fmt = "(a24,1x,a14,1x,a)"
 
-    namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2,             &
-         &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, popoutFile, &
-         &                flag__EField, flag__BField, flag__cyclicCoordinate, flag__travellingWave,     &
-         &                flag__saveParticle, flag__probeField,                                         &
-         &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,                         &
-         &                particleBoundary__x, particleBoundary__y, particleBoundary__z,                &
-         &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                               &
-         &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq,             &
-         &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,                &
+    namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
+         &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
+         &                popoutFile,                                                       &
+         &                flag__EField, flag__BField, flag__axisymmetry,                    &
+         &                flag__travellingWave, flag__cyclicCoordinate,                     &
+         &                flag__saveParticle, flag__probeField,                             &
+         &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
+         &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
+         &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
+         &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq, &
+         &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,    &
          &                t_probeStart, t_probeStep, t_probeEnd
     
     open(lun,file=trim(configFile),status="old",form="formatted")

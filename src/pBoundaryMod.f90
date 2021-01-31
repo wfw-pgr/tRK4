@@ -17,8 +17,12 @@ contains
     if ( trim(particleBoundary__z).eq."periodic" ) then
        call pBoundary__periodic( "z" )
     endif
-    call pBoundary__popout
-    
+
+    if ( flag__axisymmetry ) then
+       call pBoundary__popout_axisymm
+    else
+       call pBoundary__popout
+    endif
     return
   end subroutine particle__Boundary
   
@@ -87,6 +91,60 @@ contains
   end subroutine pBoundary__popout
   
 
+  ! ====================================================== !
+  ! === particle__popout__boundary ( axisymm ver. )    === !
+  ! ====================================================== !
+  subroutine pBoundary__popout_axisymm
+    use variablesMod
+    implicit none
+    integer       :: ipt
+    logical, save :: flag__initFileMake = .true.
+    
+    ! ------------------------------------------------------ !
+    ! --- [1] initialize popoutFile                      --- !
+    ! ------------------------------------------------------ !
+    if ( flag__initFileMake ) then
+       open(lun,file=trim(popoutFile),form="formatted",status="replace")
+       write(lun,*) "# ipt, pxv "
+       close(lun)
+    endif
+
+    ! ------------------------------------------------------ !
+    ! --- [2] popout boundary check                      --- !
+    ! ------------------------------------------------------ !
+    do ipt=1, npt
+       if ( pxv(wt_,ipt).gt.0.d0 ) then
+
+          ! ------------------------------------------------------ !
+          ! --- [2-1] x-boundary popout                        --- !
+          ! ------------------------------------------------------ !
+          if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).ge.xMax ) ) then
+             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+             open(lun,file=trim(popoutFile),form="formatted",position="append")
+             write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+             close(lun)
+             pxv(wt_,ipt) = 0.d0
+          endif
+
+          ! ------------------------------------------------------ !
+          ! --- [2-2] z-boundary popout                        --- !
+          ! ------------------------------------------------------ !
+          if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).ge.zMax ) ) then
+             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+             open(lun,file=trim(popoutFile),form="formatted",position="append")
+             write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+             close(lun)
+             pxv(wt_,ipt) = 0.d0
+          endif
+
+       endif
+    enddo
+
+    return
+  end subroutine pBoundary__popout_axisymm
+  
+
+  
   ! ====================================================== !
   ! === periodic Boundary condition in z               === !
   ! ====================================================== !

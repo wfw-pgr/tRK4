@@ -1,6 +1,7 @@
 module rkgSolverMod
 contains
 
+  
   ! ====================================================== !
   ! === Runge-Kutta-4th solver (xp,vp)                 === !
   ! ====================================================== !
@@ -190,5 +191,75 @@ contains
     return
   end subroutine into__non_relativistic
   
+
+  ! ====================================================== !
+  ! === into__rtz_coordinate                           === !
+  ! ====================================================== !
+  subroutine into__rtz_coordinate
+    use variablesMod
+    implicit none
+    integer            :: ipt
+    double precision   :: rpos, rInv, vxh, vyh, costh, sinth
+    
+    do ipt=1, npt
+       
+       rpos     = sqrt( pxv(xp_,ipt)**2 + pxv(yp_,ipt)**2 )
+       rInv     = 1.d0 / rpos
+       if ( rpos.eq.0.d0 ) then
+          costh = 1.d0
+          sinth = 0.d0
+       else
+          costh = pxv(xp_,ipt) * rInv
+          sinth = pxv(yp_,ipt) * rInv
+       end if
+       vxh          = pxv(vx_,ipt)
+       vyh          = pxv(vy_,ipt)
+       pxv(xp_,ipt) =   rpos
+       pxv(yp_,ipt) =   0.d0
+       pxv(vx_,ipt) =   costh*vxh + sinth*vyh
+       pxv(vy_,ipt) = - sinth*vxh + costh*vyh
+    enddo
+    
+    return
+  end subroutine into__rtz_coordinate
+  
   
 end module rkgSolverMod
+
+
+
+! ! -- (6) Get psued Coordinate (xyz)     -- !
+! vnrm2        = pxv(vr_,m,k)**2 + pxv(vt_,m,k)**2 + pxv(vz_,m,k)**2
+! chk          = chk  +  max( 0.d0,  ( vnrm2 - cSpeedLimit ) )
+! gamma        = dt   / sqrt( 1.d0 +   vnrm2 )
+! psuedxy(1)   = pxv(rp_,m,k) + gamma*pxv(vr_,m,k) + rMin
+! psuedxy(2)   =              + gamma*pxv(vt_,m,k)
+! psuedxy(3)   = sqrt( psuedxy(1)**2 + psuedxy(2)**2 )
+
+! ! -- (7) Copy to Old Position           -- !
+! pxv(ro_,m,k) = pxv(rp_,m,k)
+! pxv(zo_,m,k) = pxv(zp_,m,k)
+
+! ! -- (8) Reflection :: boundary condition for RMax, RMin
+! if ( psuedxy(3).gt.rRefl2 ) call ReflecInXY( psuedxy, pxv(1:8,m,k), rRefl2, +1.d0, rMin, gamma, dr, dz )
+! ! if ( psuedxy(3) .lt. rRefl1 ) call ReflecInXY( psuedxy, pxv(:,m,k), rRefl1, -1.d0, rMin, gamma, dr, dz )
+! pxv(rp_,m,k) = psuedxy(3) - rMin
+! pxv(zp_,m,k) = pxv(zp_,m,k) + gamma*pxv(vz_,m,k)
+
+! ! -- (8) calculate cos(a) & sin(a)      -- !
+! psuedxy(3)   = 1.d0  / psuedxy(3)
+! if ( pxv(rp_,m,k).ne.0.d0 ) then
+!    costh     = psuedxy(1) * psuedxy(3)
+!    sinth     = psuedxy(2) * psuedxy(3)
+! else
+!    costh     = 1.d0
+!    sinth     = 0.d0
+! endif
+
+! ! -- (9) rotate velocity                -- !
+! vtmp(1)      = pxv(vr_,m,k)
+! vtmp(2)      = pxv(vt_,m,k)
+! pxv(vr_,m,k) =   costh * vtmp(1) + sinth * vtmp(2)
+! pxv(vt_,m,k) = - sinth * vtmp(1) + costh * vtmp(2)
+! ! pxv(vt_,m,k) = vtmp(2) * ( pxv(ro_,m,k)+rMin ) * psuedxy(3) ! angular-momentum conservation
+

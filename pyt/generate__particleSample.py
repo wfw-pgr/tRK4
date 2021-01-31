@@ -7,27 +7,36 @@ import numpy as np
 
 def generate__particleSample():
 
-
-    npt         = 11
-    beta        = 0.99
-    cv          = 2.9979246e+08
-    v0          = beta * cv
-
     xp_,yp_,zp_ = 0, 1, 2
     vx_,vy_,vz_ = 3, 4, 5
     
+    import nkUtilities.load__constants as lcn
+    inpFile     = "dat/particle.conf"
+    const       = lcn.load__constants( inpFile=inpFile )
+
     # ------------------------------------------------- #
     # --- [1] particle generation                   --- #
     # ------------------------------------------------- #
 
-    Data        = np.zeros( (npt,6) )
-    Data[:,xp_] = 0.0
-    Data[:,yp_] = np.linspace( -0.005, 0.005, 11 )
-    Data[:,zp_] = 0.0
-    Data[:,vx_] = 0.0
-    Data[:,vy_] = 0.0
-    Data[:,vz_] = + v0
-    
+    #  -- [1-1] systematic components (xp)          --  #
+    Data        = np.zeros( (const["npt"],6) )
+    Data[:,xp_] = np.linspace( const["xMin"], const["xMax"], const["npt"] )
+    Data[:,yp_] = np.linspace( const["yMin"], const["yMax"], const["npt"] )
+    Data[:,zp_] = np.linspace( const["zMin"], const["zMax"], const["npt"] )
+    #  -- [1-2] systematic components (vp)          --  #
+    Data[:,vx_] = const["cv"] * const["beta_x"]
+    Data[:,vy_] = const["cv"] * const["beta_y"]
+    Data[:,vz_] = const["cv"] * const["beta_z"]
+
+    #  -- [1-3] random components (xp)              --  #
+    Data[:,xp_] = Data[:,xp_] + np.random.randn( const["npt"] ) * const["sigma_x"]
+    Data[:,yp_] = Data[:,yp_] + np.random.randn( const["npt"] ) * const["sigma_y"]
+    Data[:,zp_] = Data[:,zp_] + np.random.randn( const["npt"] ) * const["sigma_z"]
+    #  -- [1-4] random components (vp)              --  #
+    Data[:,vx_] = Data[:,vx_] + np.random.randn( const["npt"] )*const["cv"]*const["sigma_vx"]
+    Data[:,vy_] = Data[:,vy_] + np.random.randn( const["npt"] )*const["cv"]*const["sigma_vy"]
+    Data[:,vz_] = Data[:,vz_] + np.random.randn( const["npt"] )*const["cv"]*const["sigma_vz"]
+
     # ------------------------------------------------- #
     # --- [2] save in outFile                       --- #
     # ------------------------------------------------- #

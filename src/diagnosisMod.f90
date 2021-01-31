@@ -26,7 +26,7 @@ contains
           write(cpt,"(i6.6)") ipt
           probeFile = trim( probeFileBase ) // cpt // ".dat"
           open (lun,file=trim(probeFile),status="replace",form="formatted")
-          write(lun,"(a)") "# ptime xp yp zp vx vy vz ex ey ez bx by bz"
+          write(lun,"(a)") "# ptime xp yp zp vx vy vz ex ey ez bx by bz wt"
           close(lun)
        enddo
        !  -- [1-2] buff initialization                   --  !
@@ -37,7 +37,6 @@ contains
        !  -- [1-3] time schedule settings                --  !
        t_nextProbe      = t_probeStart
        write(6,"(a)",advance="yes") "[Done]"
-       write(6,*) "here"
     endif
     
     ! ------------------------------------------------------ !

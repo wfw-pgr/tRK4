@@ -1,0 +1,38 @@
+
+
+# ========================================================== #
+# ===  particle tracker using RK4 :: tRK4                === #
+# ========================================================== #
+
+
+[INPUT]
+
+	* dat/parameter.conf     ==>     input.lst   ( using pyt/into__namelist.py )
+	* dat/EField.dat                  ( flag__EField == .true. )
+	* dat/BField.dat                  ( flag__BField == .true. )
+	* dat/particles.dat
+	* dat/Eigen1.dat , dat/Eigen2.dat ( flag__travellingWave == .true. )
+
+[OUTPUT]
+ 
+	* prb/probe******.dat
+
+[HOWTO]
+
+	* modify dat/parameter.conf
+	$ python pyt/into__namelist.py     ( ==> input.lst )
+	$ cd src && make all && cd ../     ( compile )
+	$ ./main
+
+[Sample]
+
+	$ python pyt/generate__eFieldSample.py
+	$ python pyt/generate__bfieldSample.py
+	$ python pyt/generate__twSample.py
+
+[PostProcess]
+
+	$ python pyt/time_vs_probeData.py
+	$ python pyt/time_vs_energy.py
+
+	$ python pyt/display__travellingWave.py

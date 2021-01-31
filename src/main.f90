@@ -9,7 +9,7 @@ program main
   use fBoundaryMod
   use diagnosisMod
   implicit none
-  integer :: i, j, k
+  integer :: i, j, k, ipt
   
   ! ------------------------------------------------------ !
   ! --- [1] preparation of simulation                  --- !
@@ -28,9 +28,10 @@ program main
   
   call Field__Boundary
 
-  
   call load__particles
   call into__relativistic
+  if ( flag__axisymmetry  ) call initialize__axisymmMode
+  
   if ( flag__saveParticle ) call save__particles  ( "initi" )
   if ( flag__probeField   ) call probe__eulerField( "initi" )
      
@@ -48,7 +49,6 @@ program main
   write(6,"(a)") "[main] ===                  Begening of Main Loop.                  === "
   write(6,"(a)") "[main] ================================================================ "
   write(6,"(a)")
-  
   ! ------------------------------------------------------ !
   ! --- [2] Main Loop                                  --- !
   ! ------------------------------------------------------ !
@@ -64,6 +64,7 @@ program main
 
      !  -- [2-3] step forward particle info.           --  !
      call RK4__tracker
+     if ( flag__axisymmetry    ) call into__rtz_coordinate
      call particle__Boundary
 
      !  -- [2-4] save particle information             --  !

@@ -31,6 +31,7 @@ module variablesMod
 
   logical                       :: flag__EField
   logical                       :: flag__BField
+  logical                       :: flag__axisymmetry
   logical                       :: flag__cyclicCoordinate
   logical                       :: flag__travellingWave
   logical                       :: flag__saveParticle

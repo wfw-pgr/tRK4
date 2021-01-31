@@ -6,32 +6,28 @@ import numpy as np
 
 def generate__bFieldSample():
 
-    x_,y_,z_    = 0, 1, 2
-    vx_,vy_,vz_ = 0, 1, 2
-    
-    BField_strength = 0.0
+    x_,y_,z_        = 0, 1, 2
+    vx_,vy_,vz_     = 0, 1, 2
+    BField_strength = 0.000
     
     # ------------------------------------------------- #
     # --- [1] load config File                      --- #
     # ------------------------------------------------- #
-
     inpFile = "dat/parameter.conf"
     import nkUtilities.load__constants as lcn
     const = lcn.load__constants( inpFile=inpFile )
-
     
     # ------------------------------------------------- #
     # --- [2] grid generation                       --- #
     # ------------------------------------------------- #
-    
     import nkUtilities.equiSpaceGrid as esg
-    x1MinMaxNum = [ const["xMin"], const["xMax"], const["LI"] ]
-    x2MinMaxNum = [ const["yMin"], const["yMax"], const["LJ"] ]
-    x3MinMaxNum = [ const["zMin"], const["zMax"], const["LK"] ]
-    ret         = esg.equiSpaceGrid( x1MinMaxNum=x1MinMaxNum, x2MinMaxNum=x2MinMaxNum, \
-                                     x3MinMaxNum=x3MinMaxNum, returnType = "structured" )
+    x1MinMaxNum     = [ const["xMin"], const["xMax"], const["LI"] ]
+    x2MinMaxNum     = [ const["yMin"], const["yMax"], const["LJ"] ]
+    x3MinMaxNum     = [ const["zMin"], const["zMax"], const["LK"] ]
+    ret             = esg.equiSpaceGrid( x1MinMaxNum=x1MinMaxNum, x2MinMaxNum=x2MinMaxNum, \
+                                         x3MinMaxNum=x3MinMaxNum, returnType = "structured" )
     bfield          = np.zeros_like( ( ret ) )
-    bfield[...,vy_] = BField_strength
+    bfield[...,vz_] = BField_strength
 
     Data            = np.concatenate( (ret,bfield), axis=3 )
     

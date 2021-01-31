@@ -20,12 +20,22 @@ contains
     xLeng =  xMax - xMin
     yLeng =  yMax - yMin
     zLeng =  zMax - zMin
-    dx    = xLeng / dble( LI-1 )
-    dy    = yLeng / dble( LJ-1 )
-    dz    = zLeng / dble( LK-1 )
-    dxInv =  1.d0 / dx
-    dyInv =  1.d0 / dy
-    dzInv =  1.d0 / dz
+
+    if ( flag__axisymmetry ) then
+       dx    = xLeng / dble( LI-1 )
+       dy    =  0.d0
+       dz    = zLeng / dble( LK-1 )
+       dxInv =  1.d0 / dx
+       dyInv =  0.d0
+       dzInv =  1.d0 / dz
+    else
+       dx    = xLeng / dble( LI-1 )
+       dy    = yLeng / dble( LJ-1 )
+       dz    = zLeng / dble( LK-1 )
+       dxInv =  1.d0 / dx
+       dyInv =  1.d0 / dy
+       dzInv =  1.d0 / dz
+    endif
 
     ! ------------------------------------------------------ !
     ! --- [3] initialization of time sequence            --- !
@@ -54,6 +64,7 @@ contains
   end subroutine initialize__variables
 
 
+  
   ! ====================================================== !
   ! === initialize periodic field condition            === !
   ! ====================================================== !
@@ -66,6 +77,52 @@ contains
     write(6,"(a)") "[initialize__periodicField] initilizing period_counter... [Done]"
     return
   end subroutine initialize__periodicField
+
+
+  
+  ! ====================================================== !
+  ! === initialize axisymmetric mode                   === !
+  ! ====================================================== !
+  subroutine initialize__axisymmMode
+    use variablesMod
+    use rkgSolverMod
+    implicit none
+
+    ! ------------------------------------------------------ !
+    ! --- [1] check simulation condition                 --- !
+    ! ------------------------------------------------------ !
+    if ( ( LJ.ne.1 ).or.( yMin.ne.0.d0 ).or.( yMax.ne.0.d0 ) ) then
+       write(6,"(a)") "[initialize__axisymmMode]  illegal coordinate  [ERROR]"
+       write(6,*    ) "            :: flag__axisymmetry   :: ", flag__axisymmetry
+       write(6,*    ) "            :: LJ   ( == 1 )       :: ", LJ
+       write(6,*    ) "            :: yMin ( == 0 )       :: ", yMin
+       write(6,*    ) "            :: yMax ( == 0 )       :: ", yMax
+       stop
+    endif
+    if ( trim(FieldBoundary__y).eq."Neumann" ) then
+       ! --- nothing to do --- !
+    else
+       write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
+       write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
+       FieldBoundary__y = "Neumann"
+    endif
+    
+    ! ------------------------------------------------------ !
+    ! --- [2] particle coordinate ==> rtz                --- !
+    ! ------------------------------------------------------ !
+    call into__rtz_coordinate
+
+    ! ------------------------------------------------------ !
+    ! --- [3] Message & return                           --- !
+    ! ------------------------------------------------------ !
+    write(6,*)
+    write(6,"(a)") "[initialize__axisymmMode] flag__axisymmetry == .true. >>> axisymmetric Mode."
+    write(6,*)
+
+    return
+  end subroutine initialize__axisymmMode
+    
+  
 
 
   ! ====================================================== !
@@ -131,6 +188,18 @@ contains
     write(6,"(a,e15.8)") "[Determination__DT]          :            DT   == ", dt
     write(6,"(a)"      ) "[Determination__DT]        ============================================== "
     write(6,"(a)"      )
+
+    if ( ( dt_wci.lt.dt ).or.( dt_CFL.lt.dt ) ) then
+       write(6,*)
+       write(6,*)
+       write(6,"(a)") "#############################  [CAUTION]  ##############################"
+       write(6,*)
+       write(6,"(a)") "[Determination__DT]  [CAUTION] dt < dt_wci , dt < dt_CFL !!!! "
+       write(6,*)
+       write(6,"(a)") "########################################################################"
+       write(6,*)
+       write(6,*)
+    endif
     
     return
   end subroutine Determination__DT
