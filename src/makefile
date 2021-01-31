@@ -12,10 +12,16 @@ object  = \
   diagnosisMod.o \
   main.o
 
-FC = gfortran
 
+# --- for gfortran --- # 
+FC      = gfortran
 FFLAGS  = -O3
-LDFLAGS =
+LDFLAGS = 
+
+# --- for ifort    --- #
+# FC      = ifort
+# FFLAGS  = -O4 -qopenmp -parallel -xhost -ipo
+# LDFLAGS = 
 
 
 .SUFFIXES: .o .f90
