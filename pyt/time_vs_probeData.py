@@ -23,12 +23,12 @@ def time_vs_probeData( nums=None, axis=None ):
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
     if ( nums is None ):
-        print( "[trajectory__tx] please input particle number >> ( e.g. :: 1 2 3 )" )
+        print( "[trajectory__tx] please input particle number : ( e.g. :: 1 2 3 ) >>> ", end="" )
         nums = input()
         nums = [ int(num) for num in nums.split() ]
 
     if ( axis is None ):
-        print( "[trajectory__tx] please input axis ( x/y/z )  >> ( e.g. :: x     )" )
+        print( "[trajectory__tx] please input axis ( x/y/z )  : ( e.g. :: x     ) >>> ", end="" )
         axis = input()
         
     if ( not( axis.lower() in ["x" ,"y" ,"z" ,"vx","vy","vz",\

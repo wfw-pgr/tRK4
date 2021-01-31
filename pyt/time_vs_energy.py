@@ -24,7 +24,7 @@ def time_vs_energy( nums=None ):
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
     if ( nums is None ):
-        print( "[time_vs_energy] please input particle number >> ( e.g. :: 1 2 3 )" )
+        print( "[time_vs_energy] please input particle number : ( e.g. :: 1 2 3 ) >>> ", end="" )
         nums = input()
         nums = [ int(num) for num in nums.split() ]
         

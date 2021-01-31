@@ -17,7 +17,6 @@ contains
     ! ------------------------------------------------------ !
     ! --- [1] Runge-Kutta 4th                            --- !
     ! ------------------------------------------------------ !
-
     hdt =    0.5d0 * dt
     sdt = onesixth * dt
     do ipt=1, npt
@@ -47,7 +46,6 @@ contains
        pxv(vx_:vz_,ipt) = pxv(vx_:vz_,ipt) + sdt * ( kv1 + 2.d0*kv2 + 2.d0*kv3 + kv4 )
        
     enddo
-
     return
   end subroutine RK4__tracker
     
@@ -91,9 +89,9 @@ contains
     rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
     rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv
     rposit(zp_)  = ( xp(zp_) - zMin ) * dzInv
-    ip           = max( min( nint( rposit(xp_) ), LI ), 0 )
-    jp           = max( min( nint( rposit(yp_) ), LJ ), 0 )
-    kp           = max( min( nint( rposit(zp_) ), LK ), 0 )
+    ip           = max( min( nint( rposit(xp_) ), LI-1 ), 0 )
+    jp           = max( min( nint( rposit(yp_) ), LJ-1 ), 0 )
+    kp           = max( min( nint( rposit(zp_) ), LK-1 ), 0 )
     sfx          = shapeF1st( rposit(xp_), ip, dxInv )
     sfy          = shapeF1st( rposit(yp_), jp, dyInv )
     sfz          = shapeF1st( rposit(zp_), kp, dzInv )

@@ -9,68 +9,20 @@ contains
     implicit none
     character(cLen)          :: cmt
     character(17), parameter :: char_fmt = "(a24,1x,a14,1x,a)"
+
+    namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2,             &
+         &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, popoutFile, &
+         &                flag__EField, flag__BField, flag__cyclicCoordinate, flag__travellingWave,     &
+         &                flag__saveParticle, flag__probeField,                                         &
+         &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,                         &
+         &                particleBoundary__x, particleBoundary__y, particleBoundary__z,                &
+         &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                               &
+         &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq,             &
+         &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,                &
+         &                t_probeStart, t_probeStep, t_probeEnd
     
-    open(lun,file=configFile,status="old",form="formatted")
-    
-    read(lun,char_fmt) cmt, cmt, particleFile
-    read(lun,char_fmt) cmt, cmt, EFieldFile
-    read(lun,char_fmt) cmt, cmt, BFieldFile
-    read(lun,char_fmt) cmt, cmt, twEigenFile1
-    read(lun,char_fmt) cmt, cmt, twEigenFile2
-    read(lun,char_fmt) cmt, cmt, type__EFieldFile
-    read(lun,char_fmt) cmt, cmt, type__BFieldFile
-    
-    read(lun,char_fmt) cmt, cmt, trackFileBase
-    read(lun,char_fmt) cmt, cmt, probeFileBase
-    read(lun,char_fmt) cmt, cmt, popoutFile
-
-    read(lun,*)  cmt, cmt, flag__EField
-    read(lun,*)  cmt, cmt, flag__BField
-    read(lun,*)  cmt, cmt, flag__cyclicCoordinate
-    read(lun,*)  cmt, cmt, flag__travellingWave
-    read(lun,*)  cmt, cmt, flag__saveParticle
-    read(lun,*)  cmt, cmt, flag__probeField
-    
-    
-    read(lun,char_fmt)  cmt, cmt, FieldBoundary__x
-    read(lun,char_fmt)  cmt, cmt, FieldBoundary__y
-    read(lun,char_fmt)  cmt, cmt, FieldBoundary__z
-    
-    read(lun,char_fmt)  cmt, cmt, particleBoundary__x
-    read(lun,char_fmt)  cmt, cmt, particleBoundary__y
-    read(lun,char_fmt)  cmt, cmt, particleBoundary__z
-
-    read(lun,*)  cmt, cmt, LI
-    read(lun,*)  cmt, cmt, LJ
-    read(lun,*)  cmt, cmt, LK
-
-    read(lun,*)  cmt, cmt, xMin
-    read(lun,*)  cmt, cmt, xMax
-    read(lun,*)  cmt, cmt, yMin
-    read(lun,*)  cmt, cmt, yMax
-    read(lun,*)  cmt, cmt, zMin
-    read(lun,*)  cmt, cmt, zMax
-
-    read(lun,char_fmt) cmt, cmt, type__iterMax
-    read(lun,char_fmt) cmt, cmt, type__dt
-
-    read(lun,*)  cmt, cmt, iterMax
-    read(lun,*)  cmt, cmt, dt
-    read(lun,*)  cmt, cmt, alpha_wci
-    read(lun,*)  cmt, cmt, alpha_CFL
-    read(lun,*)  cmt, cmt, freq
-    
-
-    read(lun,*)  cmt, cmt, t_simuStart
-    read(lun,*)  cmt, cmt, t_simuEnd
-    read(lun,*)  cmt, cmt, t_trackStart
-    read(lun,*)  cmt, cmt, t_trackStep
-    read(lun,*)  cmt, cmt, t_trackEnd
-
-    read(lun,*)  cmt, cmt, t_probeStart
-    read(lun,*)  cmt, cmt, t_probeStep
-    read(lun,*)  cmt, cmt, t_probeEnd
-
+    open(lun,file=trim(configFile),status="old",form="formatted")
+    read(lun,nml=parameters)
     close(lun)
     
     return
@@ -191,7 +143,6 @@ contains
 
     return
   end subroutine load__BFieldFile
-
 
   
   ! ====================================================== !
@@ -472,3 +423,68 @@ contains
   end subroutine save__particles
 
 end module ioUtilityMod
+
+
+
+
+
+
+    ! read(lun,char_fmt) cmt, cmt, particleFile
+    ! read(lun,char_fmt) cmt, cmt, EFieldFile
+    ! read(lun,char_fmt) cmt, cmt, BFieldFile
+    ! read(lun,char_fmt) cmt, cmt, twEigenFile1
+    ! read(lun,char_fmt) cmt, cmt, twEigenFile2
+    ! read(lun,char_fmt) cmt, cmt, type__EFieldFile
+    ! read(lun,char_fmt) cmt, cmt, type__BFieldFile
+    
+    ! read(lun,char_fmt) cmt, cmt, trackFileBase
+    ! read(lun,char_fmt) cmt, cmt, probeFileBase
+    ! read(lun,char_fmt) cmt, cmt, popoutFile
+
+    ! read(lun,*)  cmt, cmt, flag__EField
+    ! read(lun,*)  cmt, cmt, flag__BField
+    ! read(lun,*)  cmt, cmt, flag__cyclicCoordinate
+    ! read(lun,*)  cmt, cmt, flag__travellingWave
+    ! read(lun,*)  cmt, cmt, flag__saveParticle
+    ! read(lun,*)  cmt, cmt, flag__probeField
+    
+    
+    ! read(lun,char_fmt)  cmt, cmt, FieldBoundary__x
+    ! read(lun,char_fmt)  cmt, cmt, FieldBoundary__y
+    ! read(lun,char_fmt)  cmt, cmt, FieldBoundary__z
+    
+    ! read(lun,char_fmt)  cmt, cmt, particleBoundary__x
+    ! read(lun,char_fmt)  cmt, cmt, particleBoundary__y
+    ! read(lun,char_fmt)  cmt, cmt, particleBoundary__z
+
+    ! read(lun,*)  cmt, cmt, LI
+    ! read(lun,*)  cmt, cmt, LJ
+    ! read(lun,*)  cmt, cmt, LK
+
+    ! read(lun,*)  cmt, cmt, xMin
+    ! read(lun,*)  cmt, cmt, xMax
+    ! read(lun,*)  cmt, cmt, yMin
+    ! read(lun,*)  cmt, cmt, yMax
+    ! read(lun,*)  cmt, cmt, zMin
+    ! read(lun,*)  cmt, cmt, zMax
+
+    ! read(lun,char_fmt) cmt, cmt, type__iterMax
+    ! read(lun,char_fmt) cmt, cmt, type__dt
+
+    ! read(lun,*)  cmt, cmt, iterMax
+    ! read(lun,*)  cmt, cmt, dt
+    ! read(lun,*)  cmt, cmt, alpha_wci
+    ! read(lun,*)  cmt, cmt, alpha_CFL
+    ! read(lun,*)  cmt, cmt, freq
+    
+
+    ! read(lun,*)  cmt, cmt, t_simuStart
+    ! read(lun,*)  cmt, cmt, t_simuEnd
+    ! read(lun,*)  cmt, cmt, t_trackStart
+    ! read(lun,*)  cmt, cmt, t_trackStep
+    ! read(lun,*)  cmt, cmt, t_trackEnd
+
+    ! read(lun,*)  cmt, cmt, t_probeStart
+    ! read(lun,*)  cmt, cmt, t_probeStep
+    ! read(lun,*)  cmt, cmt, t_probeEnd
+

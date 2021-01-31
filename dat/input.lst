@@ -1,0 +1,47 @@
+&parameters
+particleFile             = "dat/particles.dat"
+EFieldFile               = "dat/EField.dat"
+BFieldFile               = "dat/BField.dat"
+twEigenFile1             = "dat/Eigen1.dat"
+twEigenFile2             = "dat/Eigen2.dat"
+type__EFieldFile         = "point"
+type__BFieldFile         = "point"
+trackFileBase            = "trk/track"
+probeFileBase            = "prb/probe"
+popoutFile               = "dat/popout.dat"
+flag__EField             = True
+flag__BField             = True
+flag__cyclicCoordinate   = False
+flag__travellingWave     = True
+flag__saveParticle       = False
+flag__probeField         = True
+FieldBoundary__x         = "Neumann"
+FieldBoundary__y         = "Neumann"
+FieldBoundary__z         = "periodic"
+particleBoundary__z      = "periodic"
+LI                       = 41
+LJ                       = 41
+LK                       = 201
+xMin                     = -0.02
+xMax                     = 0.02
+yMin                     = -0.02
+yMax                     = 0.02
+zMin                     = 0.0
+zMax                     = 0.20987394957983194
+type__iterMax            = "load"
+type__dt                 = "load"
+iterMax                  = 10000
+dt                       = 1e-12
+alpha_wci                = 1e-05
+alpha_CFL                = 0.001
+freq                     = 2856000000.0
+t_simuStart              = 0.0
+t_simuEnd                = 1e-08
+t_trackStart             = 0.0
+t_trackStep              = 1e-09
+t_trackEnd               = 1e-06
+t_probeStart             = 0.0
+t_probeStep              = 1e-11
+t_probeEnd               = 1e-08
+/   ! -- End of parameters
+

@@ -3,7 +3,7 @@ module variablesMod
   integer         , parameter   :: cLen       = 300
   integer         , parameter   :: lun        = 50
   integer         , parameter   :: buffLength = 100
-  character(cLen) , parameter   :: configFile = "dat/input.conf"
+  character(cLen) , parameter   :: configFile = "dat/input.lst"
   double precision, parameter   :: Mp         = 9.1093836d-31
   double precision, parameter   :: qe         = 1.6021766d-19
   double precision, parameter   :: cv         = 2.9979246d+08
