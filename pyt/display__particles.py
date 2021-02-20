@@ -15,6 +15,7 @@ def display__particles():
     # ------------------------------------------------- #
     config  = lcf.load__config()
     datFile = "dat/particles.dat"
+    vtkFile = "png/particles.vtu"
     pngFile = ( datFile.replace( "dat", "png" ) ).replace( ".png", "_{0}.png" )
 
     # ------------------------------------------------- #
@@ -78,13 +79,9 @@ def display__particles():
     # ------------------------------------------------- #
     # --- [7] convert particles plot into vtk       --- #
     # ------------------------------------------------- #
-    print( Data.shape )
     import nkVTKRoutines.scatter__vtkPoint as sct
-    sct.scatter__vtkPoint( Data=Data, vtkFile="png/particles.vtu" )
-    
-    # import nkVTKRoutines.convert__vtkPolyLine as vpl
-    # vpl.convert__vtkPolyLine( Data=Data, outFile="png/particles.vtp" )
-    
+    sct.scatter__vtkPoint( Data=Data, vtkFile=vtkFile )
+        
 
 # ======================================== #
 # ===  実行部                          === #

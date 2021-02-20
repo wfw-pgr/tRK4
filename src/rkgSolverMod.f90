@@ -1,11 +1,9 @@
 module rkgSolverMod
 contains
 
-  
   ! ====================================================== !
   ! === Runge-Kutta-4th solver (xp,vp)                 === !
   ! ====================================================== !
-
   subroutine RK4__tracker
     use variablesMod
     implicit none
@@ -87,26 +85,34 @@ contains
     ! ------------------------------------------------------ !
     ! --- [1] interpolate EB-Field                       --- !
     ! ------------------------------------------------------ !
-    rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
-    rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv
-    rposit(zp_)  = ( xp(zp_) - zMin ) * dzInv
-    ip           = max( min( nint( rposit(xp_) ), LI-1 ), 0 )
-    jp           = max( min( nint( rposit(yp_) ), LJ-1 ), 0 )
-    kp           = max( min( nint( rposit(zp_) ), LK-1 ), 0 )
-    sfx          = shapeF1st( rposit(xp_), ip, dxInv )
-    sfy          = shapeF1st( rposit(yp_), jp, dyInv )
-    sfz          = shapeF1st( rposit(zp_), kp, dzInv )
-    ip           = ip + 1
-    jp           = jp + 1
-    kp           = kp + 1
-    EBp(:)       = 0.d0
-    do k=-2, 2
-       do j=-2, 2
-          do i=-2, 2
-             EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
+    if   ( ( ( xp(xp_).ge.xMin ).and.( xp(xp_).lt.xMax ) ).and. &
+         & ( ( xp(yp_).ge.yMin ).and.( xp(yp_).lt.yMax ) ).and. &
+         & ( ( xp(zp_).ge.zMin ).and.( xp(zp_).lt.zMax ) ) ) then
+       
+       rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
+       rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv
+       rposit(zp_)  = ( xp(zp_) - zMin ) * dzInv
+       ip           = max( min( nint( rposit(xp_) ), LI-1 ), 0 )
+       jp           = max( min( nint( rposit(yp_) ), LJ-1 ), 0 )
+       kp           = max( min( nint( rposit(zp_) ), LK-1 ), 0 )
+       sfx          = shapeF1st( rposit(xp_), ip, dxInv )
+       sfy          = shapeF1st( rposit(yp_), jp, dyInv )
+       sfz          = shapeF1st( rposit(zp_), kp, dzInv )
+       ip           = ip + 1
+       jp           = jp + 1
+       kp           = kp + 1
+       EBp(:)       = 0.d0
+       do k=-2, 2
+          do j=-2, 2
+             do i=-2, 2
+                EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
+             enddo
           enddo
        enddo
-    enddo
+    else
+       EBp(:) = 0.d0
+    endif
+    
     ! ------------------------------------------------------ !
     ! --- [2] calculate L.H.S.                           --- !
     ! ------------------------------------------------------ !
@@ -116,7 +122,7 @@ contains
     rhs_vp(vzh_) = qm * ( EBp(ez_) + gammaInv*( vp(vxh_)*EBp(by_) - vp(vyh_)*EBp(bx_) ) )
 
     return
-  end function rhs_vp
+  end function rhs_vp  
 
 
   ! ====================================================== !
@@ -225,41 +231,3 @@ contains
   
   
 end module rkgSolverMod
-
-
-
-! ! -- (6) Get psued Coordinate (xyz)     -- !
-! vnrm2        = pxv(vr_,m,k)**2 + pxv(vt_,m,k)**2 + pxv(vz_,m,k)**2
-! chk          = chk  +  max( 0.d0,  ( vnrm2 - cSpeedLimit ) )
-! gamma        = dt   / sqrt( 1.d0 +   vnrm2 )
-! psuedxy(1)   = pxv(rp_,m,k) + gamma*pxv(vr_,m,k) + rMin
-! psuedxy(2)   =              + gamma*pxv(vt_,m,k)
-! psuedxy(3)   = sqrt( psuedxy(1)**2 + psuedxy(2)**2 )
-
-! ! -- (7) Copy to Old Position           -- !
-! pxv(ro_,m,k) = pxv(rp_,m,k)
-! pxv(zo_,m,k) = pxv(zp_,m,k)
-
-! ! -- (8) Reflection :: boundary condition for RMax, RMin
-! if ( psuedxy(3).gt.rRefl2 ) call ReflecInXY( psuedxy, pxv(1:8,m,k), rRefl2, +1.d0, rMin, gamma, dr, dz )
-! ! if ( psuedxy(3) .lt. rRefl1 ) call ReflecInXY( psuedxy, pxv(:,m,k), rRefl1, -1.d0, rMin, gamma, dr, dz )
-! pxv(rp_,m,k) = psuedxy(3) - rMin
-! pxv(zp_,m,k) = pxv(zp_,m,k) + gamma*pxv(vz_,m,k)
-
-! ! -- (8) calculate cos(a) & sin(a)      -- !
-! psuedxy(3)   = 1.d0  / psuedxy(3)
-! if ( pxv(rp_,m,k).ne.0.d0 ) then
-!    costh     = psuedxy(1) * psuedxy(3)
-!    sinth     = psuedxy(2) * psuedxy(3)
-! else
-!    costh     = 1.d0
-!    sinth     = 0.d0
-! endif
-
-! ! -- (9) rotate velocity                -- !
-! vtmp(1)      = pxv(vr_,m,k)
-! vtmp(2)      = pxv(vt_,m,k)
-! pxv(vr_,m,k) =   costh * vtmp(1) + sinth * vtmp(2)
-! pxv(vt_,m,k) = - sinth * vtmp(1) + costh * vtmp(2)
-! ! pxv(vt_,m,k) = vtmp(2) * ( pxv(ro_,m,k)+rMin ) * psuedxy(3) ! angular-momentum conservation
-

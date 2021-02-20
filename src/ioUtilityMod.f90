@@ -15,7 +15,7 @@ contains
          &                popoutFile,                                                       &
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
          &                flag__travellingWave, flag__cyclicCoordinate,                     &
-         &                flag__saveParticle, flag__probeField,                             &
+         &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
          &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &

@@ -8,7 +8,7 @@ def generate__bFieldSample():
 
     x_,y_,z_        = 0, 1, 2
     vx_,vy_,vz_     = 0, 1, 2
-    BField_strength = 0.000
+    BField_strength = 0.01000
     
     # ------------------------------------------------- #
     # --- [1] load config File                      --- #
