@@ -117,33 +117,38 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] popout boundary check                      --- !
     ! ------------------------------------------------------ !
-    do ipt=1, npt
-       if ( pxv(wt_,ipt).gt.0.d0 ) then
 
-          ! ------------------------------------------------------ !
-          ! --- [2-1] x-boundary popout                        --- !
-          ! ------------------------------------------------------ !
-          if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).ge.xMax ) ) then
-             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             open(lun,file=trim(popoutFile),form="formatted",position="append")
-             write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             close(lun)
-             pxv(wt_,ipt) = 0.d0
+    if ( flag__popoutBoundary ) then
+    
+       do ipt=1, npt
+          if ( pxv(wt_,ipt).gt.0.d0 ) then
+
+             ! ------------------------------------------------------ !
+             ! --- [2-1] x-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).ge.xMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open(lun,file=trim(popoutFile),form="formatted",position="append")
+                write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+
+             ! ------------------------------------------------------ !
+             ! --- [2-2] z-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).ge.zMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open(lun,file=trim(popoutFile),form="formatted",position="append")
+                write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+
           endif
+       enddo
 
-          ! ------------------------------------------------------ !
-          ! --- [2-2] z-boundary popout                        --- !
-          ! ------------------------------------------------------ !
-          if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).ge.zMax ) ) then
-             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             open(lun,file=trim(popoutFile),form="formatted",position="append")
-             write(6,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             close(lun)
-             pxv(wt_,ipt) = 0.d0
-          endif
-
-       endif
-    enddo
+    endif
 
     return
   end subroutine pBoundary__popout_axisymm
