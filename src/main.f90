@@ -20,6 +20,9 @@ program main
   call load__configFile
   call initialize__variables
 
+  if ( flag__standingWave ) then
+     call load__swEigenMode
+  endif
   if ( flag__travellingWave ) then
      call load__twEigenMode
   endif
@@ -58,6 +61,9 @@ program main
      call show__progressBar( iter, iterMax )
 
      !  -- [2-2] field solver                          --  !
+     if ( flag__standingWave ) then
+        call modulate__swEigenMode
+     endif
      if ( flag__travellingWave ) then
         call modulate__twEigenMode
      endif

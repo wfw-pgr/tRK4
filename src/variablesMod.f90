@@ -5,7 +5,7 @@ module variablesMod
   integer         , parameter   :: buffLength = 100
   character(cLen) , parameter   :: configFile = "dat/input.lst"
   double precision, parameter   :: Mp         = 9.1093836d-31
-  double precision, parameter   :: qe         = 1.6021766d-19
+  double precision, parameter   :: qe         = + 1.6021766d-19
   double precision, parameter   :: cv         = 2.9979246d+08
   double precision, parameter   :: cvSqInv    = 1.d0 / cv**2
 
@@ -32,6 +32,7 @@ module variablesMod
   logical                       :: flag__BField
   logical                       :: flag__axisymmetry
   logical                       :: flag__cyclicCoordinate
+  logical                       :: flag__standingWave
   logical                       :: flag__travellingWave
   logical                       :: flag__saveParticle
   logical                       :: flag__probeField
@@ -44,7 +45,7 @@ module variablesMod
   double precision              :: dt, dx, dy, dz, dxInv, dyInv, dzInv
   double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
   double precision              :: xLeng, yLeng, zLeng
-  double precision              :: freq
+  double precision              :: freq, phase_delay
 
   character(cLen)               :: type__dt, type__iterMax
   double precision              :: alpha_wci, alpha_CFL

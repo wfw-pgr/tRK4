@@ -8,8 +8,8 @@ def generate__eFieldSample():
 
     x_,y_,z_        = 0, 1, 2
     vx_,vy_,vz_     = 0, 1, 2
-    EField_strength = 0.0
-    # EField_strength = 1.0e5
+    # EField_strength = 0.0
+    EField_strength = 1.0e5
     
     # ------------------------------------------------- #
     # --- [1] load config File                      --- #
@@ -31,7 +31,7 @@ def generate__eFieldSample():
     ret         = esg.equiSpaceGrid( x1MinMaxNum=x1MinMaxNum, x2MinMaxNum=x2MinMaxNum, \
                                      x3MinMaxNum=x3MinMaxNum, returnType = "structured" )
     efield          = np.zeros_like( ( ret ) )
-    efield[...,vx_] = EField_strength
+    efield[...,vz_] = EField_strength
 
     Data            = np.concatenate( (ret,efield), axis=3 )
     

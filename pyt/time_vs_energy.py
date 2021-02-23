@@ -26,11 +26,15 @@ def time_vs_energy( nums=None ):
     if ( nums is None ):
         print( "[time_vs_energy] please input particle number : ( e.g. :: 1 2 3 ) >>> ", end="" )
         nums = input()
-        nums = [ int(num) for num in nums.split() ]
+        if ( len( nums ) == 0 ):
+            import glob
+            files = glob.glob( "prb/probe*.dat" )
+            nums  = [ int(num+1) for num in range( len(files) ) ]
+        else:
+            nums = [ int(num) for num in nums.split() ]
         
     pngFile = "png/time_vs_energy.png"
     config  = lcf.load__config()
-
     cnsFile = "dat/parameter.conf"
     const   = lcn.load__constants( inpFile=cnsFile )
 
@@ -63,8 +67,9 @@ def time_vs_energy( nums=None ):
         beta    = np.sqrt( Data[:,vx_]**2 + Data[:,vy_]**2 + Data[:,vz_]**2 ) / const["cv"]
         gamma   = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
         yAxis   = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / const["qe"] / 1.e6
-
+        
         fig.add__plot( xAxis=xAxis, yAxis=yAxis, color=colors[ik] )
+        
     fig.set__axis()
     fig.save__figure()
     

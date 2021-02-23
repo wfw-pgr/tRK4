@@ -52,27 +52,34 @@ contains
           if ( pxv(wt_,ipt).eq.0.d0 ) cycle
           
           !  -- [2-2] interpolation of field                --  !
-          rposit(xp_)  = ( pxv(xp_,ipt) - xMin ) * dxInv
-          rposit(yp_)  = ( pxv(yp_,ipt) - yMin ) * dyInv
-          rposit(zp_)  = ( pxv(zp_,ipt) - zMin ) * dzInv
-          ip           = max( min( nint( rposit(xp_) ), LI ), 0 )
-          jp           = max( min( nint( rposit(yp_) ), LJ ), 0 )
-          kp           = max( min( nint( rposit(zp_) ), LK ), 0 )
-          sfx          = shapeF1st( rposit(xp_), ip, dxInv )
-          sfy          = shapeF1st( rposit(yp_), jp, dyInv )
-          sfz          = shapeF1st( rposit(zp_), kp, dzInv )
-          ip           = ip + 1
-          jp           = jp + 1
-          kp           = kp + 1
-          EBp(:)       = 0.d0
-          do k=-2, 2
-             do j=-2, 2
-                do i=-2, 2
-                   EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
+          if   ( ( ( pxv(xp_,ipt).ge.xMin ).and.( pxv(xp_,ipt).le.xMax ) ).and. &
+               & ( ( pxv(yp_,ipt).ge.yMin ).and.( pxv(yp_,ipt).le.yMax ) ).and. &
+               & ( ( pxv(zp_,ipt).ge.zMin ).and.( pxv(zp_,ipt).le.zMax ) ) ) then
+             
+             rposit(xp_)  = ( pxv(xp_,ipt) - xMin ) * dxInv
+             rposit(yp_)  = ( pxv(yp_,ipt) - yMin ) * dyInv
+             rposit(zp_)  = ( pxv(zp_,ipt) - zMin ) * dzInv
+             ip           = max( min( nint( rposit(xp_) ), LI ), 0 )
+             jp           = max( min( nint( rposit(yp_) ), LJ ), 0 )
+             kp           = max( min( nint( rposit(zp_) ), LK ), 0 )
+             sfx          = shapeF1st( rposit(xp_), ip, dxInv )
+             sfy          = shapeF1st( rposit(yp_), jp, dyInv )
+             sfz          = shapeF1st( rposit(zp_), kp, dzInv )
+             ip           = ip + 1
+             jp           = jp + 1
+             kp           = kp + 1
+             EBp(:)       = 0.d0
+             do k=-2, 2
+                do j=-2, 2
+                   do i=-2, 2
+                      EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
+                   enddo
                 enddo
              enddo
-          enddo
-
+          else
+             EBp(:) = 0.d0
+          endif
+          
           gammaInv  = 1.d0 / sqrt( 1.d0 + &
                & ( pxv(vx_,ipt)**2 + pxv(vy_,ipt)**2 + pxv(vz_,ipt)**2 )*cvSqInv )
           probeBuff(   1,ipt,store_count) = ptime
@@ -81,7 +88,7 @@ contains
           probeBuff(8:13,ipt,store_count) = EBp(ex_:bz_)
           probeBuff(  14,ipt,store_count) = pxv(    wt_,ipt)
           probe_counter(ipt)              = probe_counter(ipt) + 1
-
+          
        enddo
        
        ! -- cyclic coordinate output -- !

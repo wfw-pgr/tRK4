@@ -14,12 +14,13 @@ contains
          &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
          &                popoutFile,                                                       &
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
-         &                flag__travellingWave, flag__cyclicCoordinate,                     &
+         &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
          &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
          &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
          &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq, &
+         &                phase_delay,                                                      &
          &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,    &
          &                t_probeStart, t_probeStep, t_probeEnd
     
@@ -208,6 +209,139 @@ contains
     return
   end subroutine load__EFieldFile
 
+
+  
+  ! ====================================================== !
+  ! === load standing wave eigenmode                   === !
+  ! ====================================================== !
+  subroutine load__swEigenMode
+    use variablesMod
+    implicit none
+    integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+    character(cLen)               :: cmt
+    double precision              :: xg(3)
+
+    ! ------------------------------------------------------ !
+    ! --- [1] Preparation                                --- !
+    ! ------------------------------------------------------ !
+
+    write(6,*)
+    write(6,"(a)"  ) "[load__swEigenMode]  allocate Em1 :: EigenMode buffer 1."
+    write(6,*)
+    allocate( Em1(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+    Em1(:,:,:,:) = 0.d0
+    
+    write(6,*)
+    write(6,"(a,a)") "[load__swEigenMode]  EFieldFile (e) :: ", trim( EFieldFile )
+    write(6,"(a,a)") "[load__swEigenMode]  BFieldFile (b) :: ", trim( BFieldFile )
+    write(6,*)
+
+    ! ------------------------------------------------------ !
+    ! --- [2] point (Text) File Type case ( mode1 : e )  --- !
+    ! ------------------------------------------------------ !
+
+    if ( flag__EField ) then
+    
+       write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading EField.... "
+
+       if ( trim(type__EFieldFile).eq."point" ) then
+
+          !  -- [2-1] mode 1                                --  !
+          open (lun,file=trim(EFieldFile),status="old",form="formatted")
+          read (lun,*) cmt
+          read (lun,*) cmt
+          read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+          if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+             write(6,*)
+             write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+             stop
+          endif
+          do k=1, LK
+             do j=1, LJ
+                do i=1, LI
+                   read(lun,*) xg(1:3), Em1(ex_:ez_,i,j,k)
+                enddo
+             enddo
+          enddo
+          close(lun)
+
+       else
+          write(6,*)
+          write(6,*)
+          write(6,*) "-----------------------------------------------------------------"
+          write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(EFieldFile)
+          write(6,*) "-----------------------------------------------------------------"
+          write(6,*)
+          write(6,*)
+          stop
+       endif
+
+       write(6,"(a)",advance="yes") "[Done]"
+       write(6,*)
+
+    endif
+       
+    ! ------------------------------------------------------ !
+    ! --- [3] point (Text) File Type case ( mode1 : b )  --- !
+    ! ------------------------------------------------------ !
+
+    if ( flag__BField ) then
+    
+       write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading BField.... "
+
+       if ( trim(type__BFieldFile).eq."point" ) then
+
+          open (lun,file=trim(BFieldFile),status="old",form="formatted")
+          read (lun,*) cmt
+          read (lun,*) cmt
+          read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+          if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+             write(6,*)
+             write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+             stop
+          endif
+          do k=1, LK
+             do j=1, LJ
+                do i=1, LI
+                   read(lun,*) xg(1:3), Em1(bx_:bz_,i,j,k)
+                enddo
+             enddo
+          enddo
+          close(lun)
+
+       else
+          write(6,*)
+          write(6,*)
+          write(6,*) "-----------------------------------------------------------------"
+          write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(BFieldFile)
+          write(6,*) "-----------------------------------------------------------------"
+          write(6,*)
+          write(6,*)
+          stop
+       endif
+
+       write(6,"(a)",advance="yes") "[Done]"
+       write(6,*)
+
+    endif
+    
+    ! ------------------------------------------------------ !
+    ! --- [4] set flags                                  --- !
+    ! ------------------------------------------------------ !
+    if ( .not.( allocated( EBf ) ) ) then
+       allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+    endif
+    
+    ! ------------------------------------------------------ !
+    ! --- [5] set flags                                  --- !
+    ! ------------------------------------------------------ !
+    flag__EField          = .false.
+    flag__BField          = .false.
+    flag__BoundaryMessage = .false.
+        
+    return
+  end subroutine load__swEigenMode
+  
 
   ! ====================================================== !
   ! === load travelling wave eigenmode                 === !

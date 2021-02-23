@@ -85,9 +85,9 @@ contains
     ! ------------------------------------------------------ !
     ! --- [1] interpolate EB-Field                       --- !
     ! ------------------------------------------------------ !
-    if   ( ( ( xp(xp_).ge.xMin ).and.( xp(xp_).lt.xMax ) ).and. &
-         & ( ( xp(yp_).ge.yMin ).and.( xp(yp_).lt.yMax ) ).and. &
-         & ( ( xp(zp_).ge.zMin ).and.( xp(zp_).lt.zMax ) ) ) then
+    if   ( ( ( xp(xp_).ge.xMin ).and.( xp(xp_).le.xMax ) ).and. &
+         & ( ( xp(yp_).ge.yMin ).and.( xp(yp_).le.yMax ) ).and. &
+         & ( ( xp(zp_).ge.zMin ).and.( xp(zp_).le.zMax ) ) ) then
        
        rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
        rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv

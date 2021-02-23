@@ -1,12 +1,20 @@
-import numpy as np
+import sys
+import numpy                      as np
+import nkUtilities.load__config   as lcf
+import nkUtilities.cMapTri        as cmt
+import nkUtilities.configSettings as cfs
 
 
 # ========================================================= #
-# ===  generate travelling wave                         === #
+# ===  display__initialAxisymmField                     === #
 # ========================================================= #
 
-def generate__travellingWave():
 
+def display__initialAxisymmField():
+
+    x_ , y_ , z_  = 0, 1, 2
+    vx_, vy_, vz_ = 3, 4, 5
+    
     # ------------------------------------------------- #
     # --- [1] Load Config & Eigenmode               --- #
     # ------------------------------------------------- #
@@ -16,9 +24,12 @@ def generate__travellingWave():
     const    = lcn.load__constants( inpFile=cnsFile )
 
     import nkUtilities.load__pointFile as lpf
-    wave1    = lpf.load__pointFile( inpFile=const["twEigenFile1"], returnType="structured" )
-    wave2    = lpf.load__pointFile( inpFile=const["twEigenFile2"], returnType="structured" )
+    efield   = lpf.load__pointFile( inpFile=const["EFieldFile"], returnType="structured" )
+    bfield   = lpf.load__pointFile( inpFile=const["BFieldFile"], returnType="structured" )
 
+    config   = lcf.load__config()
+    pngFile  = "png/field_init_{0}.png"
+    
 
     # ------------------------------------------------- #
     # --- [2] prepare cos & sin theta               --- #
@@ -26,29 +37,30 @@ def generate__travellingWave():
     time      = np.linspace( const["tw_tStart"], const["tw_tEnd"], const["tw_tDiv"] )
     theta     = 2.0*np.pi*const["freq"] * time + const["phase_delay"]
     costh     = np.cos( theta )
-    sinth     = np.sin( theta )
     
     # ------------------------------------------------- #
-    # --- [3] save in File                          --- #
+    # --- [2] convert into vts File                 --- #
     # ------------------------------------------------- #
-    # --  [3-1] preparation                         --  #
+
     import nkVTKRoutines.convert__vtkStructuredGrid as vts
-    import nkUtilities.save__pointFile as spf
+    import nkUtilities.save__pointFile              as spf
     vtsFile   = "png/wave{0:04}.vts"
+    Data      = np.zeros( (efield.shape[0],efield.shape[1],efield.shape[2],9) )
     
-    # --  [3-2] Main Loop                           --  #
+    # --  [2-2] Main Loop                           --  #
     for ik in range( const["tw_tDiv"] ):
         # --  [3-3] wave data synthesize            --  #
-        wave        = np.zeros_like( wave1 )
-        wave[...,0:3] = wave1[...,0:3]
-        wave[..., 3:] = wave1[..., 3:]*costh[ik] + wave2[..., 3:]*sinth[ik]
+        wave          = np.zeros_like( Data )
+        wave[...,0:3] = np.copy( efield[...,0:3] )
+        wave[...,3:6] = efield[...,3:]*costh[ik]
+        wave[...,6:9] = bfield[...,3:]*costh[ik]
         # --  [3-4] save as vts file                --  #
         vts.convert__vtkStructuredGrid( Data=wave, outFile=vtsFile.format(ik) )
 
+        
 
-# ========================================================= #
-# ===   実行部                                          === #
-# ========================================================= #
-
+# ======================================== #
+# ===  実行部                          === #
+# ======================================== #
 if ( __name__=="__main__" ):
-    generate__travellingWave()
+    display__initialAxisymmField()
