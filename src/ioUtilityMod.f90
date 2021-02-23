@@ -16,6 +16,7 @@ contains
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
          &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
          &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
+         &                efield_factor, bfield_factor,                                     &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
          &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
@@ -141,6 +142,13 @@ contains
     ! ------------------------------------------------------ !
     ! --- [3] post process                               --- !
     ! ------------------------------------------------------ !
+    do k=1, LK
+       do j=1, LJ
+          do i=1, LI
+             EBf(bx_:bz_,i,j,k) = bfield_factor * EBf(bx_:bz_,i,j,k)
+          enddo
+       enddo
+    enddo
     write(6,"(a)",advance="yes") "[Done]"
     write(6,*)
 
@@ -203,6 +211,14 @@ contains
     ! ------------------------------------------------------ !
     ! --- [3] post process                               --- !
     ! ------------------------------------------------------ !
+    do k=1, LK
+       do j=1, LJ
+          do i=1, LI
+             EBf(ex_:ez_,i,j,k) = efield_factor * EBf(ex_:ez_,i,j,k)
+          enddo
+       enddo
+    enddo
+    
     write(6,"(a)",advance="yes") "[Done]"
     write(6,*)
     
@@ -276,6 +292,14 @@ contains
           stop
        endif
 
+       do k=1, LK
+          do j=1, LJ
+             do i=1, LI
+                Em1(ex_:ez_,i,j,k) = efield_factor * Em1(ex_:ez_,i,j,k)
+             enddo
+          enddo
+       enddo
+
        write(6,"(a)",advance="yes") "[Done]"
        write(6,*)
 
@@ -320,6 +344,14 @@ contains
           stop
        endif
 
+       do k=1, LK
+          do j=1, LJ
+             do i=1, LI
+                Em1(bx_:bz_,i,j,k) = bfield_factor * Em1(bx_:bz_,i,j,k)
+             enddo
+          enddo
+       enddo
+       
        write(6,"(a)",advance="yes") "[Done]"
        write(6,*)
 

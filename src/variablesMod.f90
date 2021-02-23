@@ -46,6 +46,7 @@ module variablesMod
   double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
   double precision              :: xLeng, yLeng, zLeng
   double precision              :: freq, phase_delay
+  double precision              :: efield_factor, bfield_factor
 
   character(cLen)               :: type__dt, type__iterMax
   double precision              :: alpha_wci, alpha_CFL
