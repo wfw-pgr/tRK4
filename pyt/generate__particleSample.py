@@ -22,9 +22,9 @@ def generate__particleSample():
     #  -- [1-2] systematic components (xp)          --  #
     npt         = const["npt"]
     Data        = np.zeros( (const["npt"],6) )
-    xD          = ( const["xMax"] - const["xMin"] )
-    yD          = ( const["yMax"] - const["yMin"] )
-    zD          = ( const["zMax"] - const["zMin"] )
+    xD          = ( const["xMax"] - const["xMin"] ) / 3  # -- for 3 sigma = xD -- #
+    yD          = ( const["yMax"] - const["yMin"] ) / 3
+    zD          = ( const["zMax"] - const["zMin"] ) / 3
     xM          = ( const["xMax"] + const["xMin"] ) * 0.5
     yM          = ( const["yMax"] + const["yMin"] ) * 0.5
     zM          = ( const["zMax"] + const["zMin"] ) * 0.5
@@ -63,7 +63,7 @@ def generate__particleSample():
     # ------------------------------------------------- #
 
     #  -- [3-1] energy distribution                 --  #
-    eD = ( const["energy_Max"] - const["energy_Min"] )
+    eD = ( const["energy_Max"] - const["energy_Min"] ) / 3     # -- for 3 sigma = eD -- #
     eM = ( const["energy_Max"] + const["energy_Min"] ) * 0.5
     if   ( const["distribution_energy"] == "equispace" ):
         energies    = np.linspace( const["energy_Min"], const["energy_Max"], const["npt"] )

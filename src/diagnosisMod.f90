@@ -160,4 +160,61 @@ contains
   end subroutine probe__eulerField
 
 
+  ! ====================================================== !
+  ! === Screen type Beam position Monitor              === !
+  ! ====================================================== !
+  subroutine screen__beamPosMonitor( direction, screen_pos  )
+    use variablesMod
+    implicit none
+    character(1)    , intent(in) :: direction
+    double precision, intent(in) :: screen_pos
+    integer                      :: ipt, cur_idx, old_idx
+    double precision             :: p1, p2, denom, r1, r2, signchg, bpm(6)
+    logical         , save       :: Flag__initialize = .true.
+    
+    ! ------------------------------------------------------ !
+    ! --- [1] initialize bpm File                        --- !
+    ! ------------------------------------------------------ !
+    if ( Flag__initialize ) then
+       open( lun, file=trim(bpmFile), form="formatted", status="replace" )
+       write(lun,*) "# xp yp zp vx vy vz"
+       close(lun)
+       Flag__initialize = .false.
+    endif
+
+    if      ( direction.eq."x" ) then
+       cur_idx = xp_
+       old_idx = xo_
+    else if ( direction.eq."y" ) then
+       cur_idx = yp_
+       old_idx = yo_
+    else if ( direction.eq."z" ) then
+       cur_idx = zp_
+       old_idx = zo_
+    endif
+    
+
+    ! ------------------------------------------------------ !
+    ! --- [2] write bpm result                           --- !
+    ! ------------------------------------------------------ !
+    do ipt=1, npt
+       signchg = ( pxv(cur_idx,ipt)-screen_pos ) * ( pxv(old_idx,ipt)-screen_pos )
+       if ( (pxv(wt_,ipt).gt.0.d0 ).and.( signchg.le.0.d0 ) ) then
+          p1           = abs( pxv(cur_idx,ipt)-screen_pos )
+          p2           = abs( pxv(old_idx,ipt)-screen_pos )
+          denom        = 1.d0 / ( p1 + p2 )
+          r1           = p2 * denom
+          r2           = p1 * denom
+          bpm(:)       = r1*pxv(xp_:vz_,ipt) + r2*pxv(xo_:uz_,ipt)
+          pxv(wt_,ipt) = 0.d0
+          open (lun,file=trim(bpmFile),form="formatted",position="append")
+          write(lun,"(7(e15.8,1x))") bpm(:), ptime
+          close(lun)
+       endif
+    enddo
+    
+    return
+  end subroutine screen__beamPosMonitor
+
+
 end module diagnosisMod

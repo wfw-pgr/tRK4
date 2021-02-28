@@ -58,7 +58,9 @@ program main
   do iter=1, iterMax
      !  -- [2-1] display progress bar                  --  !
      ptime = ptime + dt
-     call show__progressBar( iter, iterMax )
+     if ( mod( iter, progress_interval ).eq.0 ) then
+        call show__progressBar( iter, iterMax )
+     endif
 
      !  -- [2-2] field solver                          --  !
      if ( flag__standingWave ) then
@@ -80,6 +82,12 @@ program main
      if ( ( flag__probeField   ).and.( ptime.gt.t_nextProbe ) ) then
         call probe__eulerField( "store" )
      endif
+
+     !  -- [2-5] beam position monitor                 --  !
+     if ( flag__beamposmonitor ) then
+        call screen__beamPosMonitor( bpm_direction, bpm_screen_pos )
+     endif
+     
   enddo
   write(6,"(a)")
   write(6,"(a)") "[main] ================================================================ "

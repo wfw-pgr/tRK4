@@ -12,16 +12,18 @@ contains
 
     namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
          &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
-         &                popoutFile,                                                       &
+         &                popoutFile, bpmFile,                                              &
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
          &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
          &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
+         &                flag__beamposmonitor,                                             &
          &                efield_factor, bfield_factor,                                     &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
          &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
          &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq, &
          &                phase_delay,                                                      &
+         &                bpm_direction, bpm_screen_pos,                                    &
          &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,    &
          &                t_probeStart, t_probeStep, t_probeEnd
     

@@ -9,6 +9,7 @@ type__BFieldFile         = "point"
 trackFileBase            = "trk/track"
 probeFileBase            = "prb/probe"
 popoutFile               = "dat/popout.dat"
+bpmFile                  = "bpm/screen_bpm.dat"
 flag__EField             = True
 flag__BField             = True
 flag__axisymmetry        = True
@@ -18,6 +19,7 @@ flag__travellingWave     = False
 flag__saveParticle       = False
 flag__probeField         = True
 flag__popoutBoundary     = False
+flag__beamposmonitor     = True
 efield_factor            = 8.0
 bfield_factor            = 8.0
 FieldBoundary__x         = "Neumann"
@@ -48,5 +50,7 @@ t_trackEnd               = 1e-06
 t_probeStart             = 0.0
 t_probeStep              = 1e-11
 t_probeEnd               = 1e-08
+bpm_direction            = "z"
+bpm_screen_pos           = 0.106176
 /   ! -- End of parameters
 

@@ -1,8 +1,9 @@
 module variablesMod
   implicit none
-  integer         , parameter   :: cLen       = 300
-  integer         , parameter   :: lun        = 50
-  integer         , parameter   :: buffLength = 100
+  integer         , parameter   :: cLen              = 300
+  integer         , parameter   :: lun               = 50
+  integer         , parameter   :: buffLength        = 100
+  integer         , parameter   :: progress_interval = 100
   character(cLen) , parameter   :: configFile = "dat/input.lst"
   double precision, parameter   :: Mp         = 9.1093836d-31
   double precision, parameter   :: qe         = + 1.6021766d-19
@@ -23,10 +24,9 @@ module variablesMod
   character(cLen)               :: EFieldFile, type__EFieldFile
   character(cLen)               :: BFieldFile, type__BFieldFile
   character(cLen)               :: twEigenFile1, twEigenFile2
-  character(cLen)               :: popoutFile
+  character(cLen)               :: popoutFile, bpmFile
   character(cLen)               :: particleFile
-  character(cLen)               :: trackFileBase
-  character(cLen)               :: probeFileBase
+  character(cLen)               :: trackFileBase, probeFileBase
 
   logical                       :: flag__EField
   logical                       :: flag__BField
@@ -37,6 +37,7 @@ module variablesMod
   logical                       :: flag__saveParticle
   logical                       :: flag__probeField
   logical                       :: flag__popoutBoundary
+  logical                       :: flag__beamposmonitor
 
   character(cLen)               :: FieldBoundary__x, FieldBoundary__y, FieldBoundary__z
   character(cLen)               :: particleBoundary__x, particleBoundary__y, particleBoundary__z
@@ -47,6 +48,9 @@ module variablesMod
   double precision              :: xLeng, yLeng, zLeng
   double precision              :: freq, phase_delay
   double precision              :: efield_factor, bfield_factor
+
+  character(1)                  :: bpm_direction
+  double precision              :: bpm_screen_pos
 
   character(cLen)               :: type__dt, type__iterMax
   double precision              :: alpha_wci, alpha_CFL
