@@ -73,56 +73,120 @@ contains
   ! ====================================================== !
   function rhs_vp( xp, vp )
     use variablesMod
-    use shapeFuncMod
     implicit none
     double precision, intent(in) :: xp(3), vp(3)
     double precision             :: rhs_vp(3)
-    integer                      :: i, j, k, ip, jp, kp
-    double precision             :: gammaInv
-    double precision             :: rposit(3), EBp(6), sfx(-2:2), sfy(-2:2), sfz(-2:2)
+    double precision             :: gammaInv, EBp(6)
     integer         , parameter  :: vxh_=1, vyh_=2, vzh_=3
     
     ! ------------------------------------------------------ !
     ! --- [1] interpolate EB-Field                       --- !
     ! ------------------------------------------------------ !
-    if   ( ( ( xp(xp_).ge.xMin ).and.( xp(xp_).le.xMax ) ).and. &
-         & ( ( xp(yp_).ge.yMin ).and.( xp(yp_).le.yMax ) ).and. &
-         & ( ( xp(zp_).ge.zMin ).and.( xp(zp_).le.zMax ) ) ) then
-       
-       rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
-       rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv
-       rposit(zp_)  = ( xp(zp_) - zMin ) * dzInv
-       ip           = max( min( nint( rposit(xp_) ), LI-1 ), 0 )
-       jp           = max( min( nint( rposit(yp_) ), LJ-1 ), 0 )
-       kp           = max( min( nint( rposit(zp_) ), LK-1 ), 0 )
-       sfx          = shapeF1st( rposit(xp_), ip, dxInv )
-       sfy          = shapeF1st( rposit(yp_), jp, dyInv )
-       sfz          = shapeF1st( rposit(zp_), kp, dzInv )
-       ip           = ip + 1
-       jp           = jp + 1
-       kp           = kp + 1
-       EBp(:)       = 0.d0
-       do k=-2, 2
-          do j=-2, 2
-             do i=-2, 2
-                EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
-             enddo
-          enddo
-       enddo
-    else
-       EBp(:) = 0.d0
-    endif
+    call interpolate__onParticle( xp, EBp )
     
     ! ------------------------------------------------------ !
     ! --- [2] calculate L.H.S.                           --- !
     ! ------------------------------------------------------ !
+    
     gammaInv     = sqrt( 1.d0 * ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
     rhs_vp(vxh_) = qm * ( EBp(ex_) + gammaInv*( vp(vyh_)*EBp(bz_) - vp(vzh_)*EBp(by_) ) )
     rhs_vp(vyh_) = qm * ( EBp(ey_) + gammaInv*( vp(vzh_)*EBp(bx_) - vp(vxh_)*EBp(bz_) ) )
     rhs_vp(vzh_) = qm * ( EBp(ez_) + gammaInv*( vp(vxh_)*EBp(by_) - vp(vyh_)*EBp(bx_) ) )
 
     return
-  end function rhs_vp  
+  end function rhs_vp
+
+
+  ! ====================================================== !
+  ! === interpolate on particle                        === !
+  ! ====================================================== !
+  subroutine interpolate__onParticle( xp, EBp )
+    use variablesMod
+    use shapeFuncMod
+    implicit none
+    double precision, intent(in)  :: xp(3)
+    double precision, intent(out) :: EBp(6)
+    integer                       :: i, j, k, ip, jp, kp, iF
+    double precision              :: rposit(3), sfx(-2:2), sfy(-2:2), sfz(-2:2)
+
+
+    ! ------------------------------------------------------ !
+    ! --- [1] initialize EBp return variable             --- !
+    ! ------------------------------------------------------ !
+    EBp(1:6) = 0.d0
+
+    ! ------------------------------------------------------ !
+    ! --- [2] EField interpolation                       --- !
+    ! ------------------------------------------------------ !
+    do iF=1, nEField
+              
+       if   ( ( ( xp(xp_).ge.efields(iF)%xMin ).and.( xp(xp_).le.efields(iF)%xMax ) ).and. &
+            & ( ( xp(yp_).ge.efields(iF)%yMin ).and.( xp(yp_).le.efields(iF)%yMax ) ).and. &
+            & ( ( xp(zp_).ge.efields(iF)%zMin ).and.( xp(zp_).le.efields(iF)%zMax ) ) ) then
+
+          rposit(xp_)  = ( xp(xp_) - efields(iF)%xMin ) * efields(iF)%dxInv
+          rposit(yp_)  = ( xp(yp_) - efields(iF)%yMin ) * efields(iF)%dyInv
+          rposit(zp_)  = ( xp(zp_) - efields(iF)%zMin ) * efields(iF)%dzInv
+          ip           = max( min( nint( rposit(xp_) ), efields(iF)%LI-1 ), 0 )
+          jp           = max( min( nint( rposit(yp_) ), efields(iF)%LJ-1 ), 0 )
+          kp           = max( min( nint( rposit(zp_) ), efields(iF)%LK-1 ), 0 )
+          sfx          = shapeF1st( rposit(xp_), ip, efields(iF)%dxInv )
+          sfy          = shapeF1st( rposit(yp_), jp, efields(iF)%dyInv )
+          sfz          = shapeF1st( rposit(zp_), kp, efields(iF)%dzInv )
+          ip           = ip + 1
+          jp           = jp + 1
+          kp           = kp + 1
+          do k=-2, 2
+             do j=-2, 2
+                do i=-2, 2
+                   EBp(ex_:ez_) = EBp(ex_:ez_) + sfx(i)*sfy(j)*sfz(k) * efields(iF)%modulation &
+                        &                      * efields(iF)%EBf(fx_:fz_,ip+i,jp+j,kp+k)
+                enddo
+             enddo
+          enddo
+          
+       endif
+    enddo
+
+    ! ------------------------------------------------------ !
+    ! --- [3] BField interpolation                       --- !
+    ! ------------------------------------------------------ !
+    do iF=1, nBField
+       
+       if   ( ( ( xp(xp_).ge.bfields(iF)%xMin ).and.( xp(xp_).le.bfields(iF)%xMax ) ).and.&
+            & ( ( xp(yp_).ge.bfields(iF)%yMin ).and.( xp(yp_).le.bfields(iF)%yMax ) ).and.&
+            & ( ( xp(zp_).ge.bfields(iF)%zMin ).and.( xp(zp_).le.bfields(iF)%zMax ) ) ) then
+
+          rposit(xp_)  = ( xp(xp_) - bfields(iF)%xMin ) * bfields(iF)%dxInv
+          rposit(yp_)  = ( xp(yp_) - bfields(iF)%yMin ) * bfields(iF)%dyInv
+          rposit(zp_)  = ( xp(zp_) - bfields(iF)%zMin ) * bfields(iF)%dzInv
+          ip           = max( min( nint( rposit(xp_) ), bfields(iF)%LI-1 ), 0 )
+          jp           = max( min( nint( rposit(yp_) ), bfields(iF)%LJ-1 ), 0 )
+          kp           = max( min( nint( rposit(zp_) ), bfields(iF)%LK-1 ), 0 )
+          sfx          = shapeF1st( rposit(xp_), ip, bfields(iF)%dxInv )
+          sfy          = shapeF1st( rposit(yp_), jp, bfields(iF)%dyInv )
+          sfz          = shapeF1st( rposit(zp_), kp, bfields(iF)%dzInv )
+          ip           = ip + 1
+          jp           = jp + 1
+          kp           = kp + 1
+          ! write(6,*) ip, jp, kp
+          ! write(6,*) rposit(:), xp(:)
+          ! write(6,*) EBp(:)
+          ! write(6,*)
+          do k=-2, 2
+             do j=-2, 2
+                do i=-2, 2
+                   EBp(bx_:bz_) = EBp(bx_:bz_) + sfx(i)*sfy(j)*sfz(k) * bfields(iF)%modulation &
+                        &                      * bfields(iF)%EBf(fx_:fz_,ip+i,jp+j,kp+k)
+                enddo
+             enddo
+          enddo
+
+       endif
+    enddo
+
+    return
+  end subroutine interpolate__onParticle
 
 
   ! ====================================================== !
@@ -231,3 +295,34 @@ contains
   
   
 end module rkgSolverMod
+
+
+
+    ! if   ( ( ( xp(xp_).ge.xMin ).and.( xp(xp_).le.xMax ) ).and. &
+    !      & ( ( xp(yp_).ge.yMin ).and.( xp(yp_).le.yMax ) ).and. &
+    !      & ( ( xp(zp_).ge.zMin ).and.( xp(zp_).le.zMax ) ) ) then
+       
+    !    rposit(xp_)  = ( xp(xp_) - xMin ) * dxInv
+    !    rposit(yp_)  = ( xp(yp_) - yMin ) * dyInv
+    !    rposit(zp_)  = ( xp(zp_) - zMin ) * dzInv
+    !    ip           = max( min( nint( rposit(xp_) ), LI-1 ), 0 )
+    !    jp           = max( min( nint( rposit(yp_) ), LJ-1 ), 0 )
+    !    kp           = max( min( nint( rposit(zp_) ), LK-1 ), 0 )
+    !    sfx          = shapeF1st( rposit(xp_), ip, dxInv )
+    !    sfy          = shapeF1st( rposit(yp_), jp, dyInv )
+    !    sfz          = shapeF1st( rposit(zp_), kp, dzInv )
+    !    ip           = ip + 1
+    !    jp           = jp + 1
+    !    kp           = kp + 1
+    !    EBp(:)       = 0.d0
+    !    do k=-2, 2
+    !       do j=-2, 2
+    !          do i=-2, 2
+    !             EBp(:) = EBp(:) + sfx(i)*sfy(j)*sfz(k) * EBf(:,ip+i,jp+j,kp+k)
+    !          enddo
+    !       enddo
+    !    enddo
+    ! else
+    !    EBp(:) = 0.d0
+    ! endif
+    

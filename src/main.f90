@@ -20,26 +20,19 @@ program main
   call load__configFile
   call initialize__variables
 
-  if ( flag__standingWave ) then
-     call load__swEigenMode
-  endif
-  if ( flag__travellingWave ) then
-     call load__twEigenMode
-  endif
-  if ( flag__EField ) call load__EFieldFile
-  if ( flag__BField ) call load__BFieldFile
-  
+  call load__ebFieldFile
   call Field__Boundary
 
   call load__particles
   call into__relativistic
-  if ( flag__axisymmetry  ) call initialize__axisymmMode
-  
-  if ( flag__saveParticle ) call save__particles  ( "initi" )
-  if ( flag__probeField   ) call probe__eulerField( "initi" )
      
+  call check__scale_of_variables
   call Determination__DT
   call Determination__iterMax
+
+  if ( flag__axisymmetry  ) call initialize__axisymmMode
+  if ( flag__saveParticle ) call save__particles  ( "initi" )
+  if ( flag__probeField   ) call probe__eulerField( "initi" )
 
   if (   ( trim(particleBoundary__x).eq."periodic" ).or.&
        & ( trim(particleBoundary__y).eq."periodic" ).or.&
@@ -61,20 +54,17 @@ program main
      if ( mod( iter, progress_interval ).eq.0 ) then
         call show__progressBar( iter, iterMax )
      endif
-
-     !  -- [2-2] field solver                          --  !
-     if ( flag__standingWave ) then
-        call modulate__swEigenMode
+     
+     ! -- [2-2] field solver                          --  !
+     if ( flag__modulateField ) then
+        call modulate__ebfields
      endif
-     if ( flag__travellingWave ) then
-        call modulate__twEigenMode
-     endif
-
+     
      !  -- [2-3] step forward particle info.           --  !
      call RK4__tracker
      if ( flag__axisymmetry    ) call into__rtz_coordinate
      call particle__Boundary
-
+     
      !  -- [2-4] save particle information             --  !
      if ( ( flag__saveParticle ).and.( ptime.gt.t_nextSave  ) ) then
         call save__particles( "store" )
@@ -82,11 +72,11 @@ program main
      if ( ( flag__probeField   ).and.( ptime.gt.t_nextProbe ) ) then
         call probe__eulerField( "store" )
      endif
-
+     
      !  -- [2-5] beam position monitor                 --  !
-     if ( flag__beamposmonitor ) then
-        call screen__beamPosMonitor( bpm_direction, bpm_screen_pos )
-     endif
+     ! if ( flag__beamposmonitor ) then
+     !    call screen__beamPosMonitor( bpm_direction, bpm_screen_pos )
+     ! endif
      
   enddo
   write(6,"(a)")
@@ -101,10 +91,28 @@ program main
   
   if ( flag__saveParticle ) call save__particles  ( "final" )
   if ( flag__probeField   ) call probe__eulerField( "final" )
-
+  
   call show__endLogo  
-  deallocate( EBf, pxv )
+  deallocate( pxv )
 
 end program main
 
+
+
+
+! if ( flag__standingWave ) then
+!    call load__swEigenMode
+! endif
+! if ( flag__travellingWave ) then
+!    call load__twEigenMode
+! endif
+! if ( flag__EField ) call load__EFieldFile
+! if ( flag__BField ) call load__BFieldFile
+
+! if ( flag__standingWave ) then
+!    call modulate__swEigenMode
+! endif
+! if ( flag__travellingWave ) then
+!    call modulate__twEigenMode
+! endif
 

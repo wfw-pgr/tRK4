@@ -17,25 +17,6 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] initialization of length                   --- !
     ! ------------------------------------------------------ !
-    xLeng =  xMax - xMin
-    yLeng =  yMax - yMin
-    zLeng =  zMax - zMin
-
-    if ( flag__axisymmetry ) then
-       dx    = xLeng / dble( LI-1 )
-       dy    =  0.d0
-       dz    = zLeng / dble( LK-1 )
-       dxInv =  1.d0 / dx
-       dyInv =  0.d0
-       dzInv =  1.d0 / dz
-    else
-       dx    = xLeng / dble( LI-1 )
-       dy    = yLeng / dble( LJ-1 )
-       dz    = zLeng / dble( LK-1 )
-       dxInv =  1.d0 / dx
-       dyInv =  1.d0 / dy
-       dzInv =  1.d0 / dz
-    endif
 
     ! ------------------------------------------------------ !
     ! --- [3] initialization of time sequence            --- !
@@ -49,21 +30,112 @@ contains
     
     write(6,"(a)"            ) "[initialize__variables]    ========  [initialized variables   ]  ======== "
     write(6,"(a,18x,a,e15.8)") "qm"   ,  " :: ", qm
-    write(6,"(a,15x,a,e15.8)") "xLeng",  " :: ", xLeng
-    write(6,"(a,15x,a,e15.8)") "yLeng",  " :: ", yLeng
-    write(6,"(a,15x,a,e15.8)") "zLeng",  " :: ", zLeng
-    write(6,"(a,18x,a,e15.8)") "dx"   ,  " :: ", dx
-    write(6,"(a,18x,a,e15.8)") "dy"   ,  " :: ", dy
-    write(6,"(a,18x,a,e15.8)") "dz"   ,  " :: ", dz
-    write(6,"(a,15x,a,e15.8)") "dxInv",  " :: ", dxInv
-    write(6,"(a,15x,a,e15.8)") "dyInv",  " :: ", dyInv
-    write(6,"(a,15x,a,e15.8)") "dzInv",  " :: ", dzInv
     write(6,"(a)"            ) "[initialize__variables]    ============================================== "    
     
     return
   end subroutine initialize__variables
 
 
+  ! ====================================================== !
+  ! === check__scale_of_variables                      === !
+  ! ====================================================== !
+  subroutine check__scale_of_variables
+    use variablesMod
+    implicit none
+    integer :: iF, i, j, k
+
+    ! ------------------------------------------------------ !
+    ! --- [1] boundary box                               --- !
+    ! ------------------------------------------------------ !
+    xMin = + 1.e10
+    xMax = - 1.e10
+    yMin = + 1.e10
+    yMax = - 1.e10
+    zMin = + 1.e10
+    zMax = - 1.e10
+    dx   = + 1.e10
+    dy   = + 1.e10
+    dz   = + 1.e10
+    do iF=1, nEField
+       xMin = min( xMin, efields(iF)%xMin )
+       xMax = max( xMax, efields(iF)%xMax )
+       yMin = min( yMin, efields(iF)%yMin )
+       yMax = max( yMax, efields(iF)%yMax )
+       zMin = min( zMin, efields(iF)%zMin )
+       zMax = max( zMax, efields(iF)%zMax )
+       dx   = min(   dx, efields(iF)%dx   )
+       dy   = min(   dy, efields(iF)%dy   )
+       dz   = min(   dz, efields(iF)%dz   )
+    enddo
+    do iF=1, nBField
+       xMin = min( xMin, bfields(iF)%xMin )
+       xMax = max( xMax, bfields(iF)%xMax )
+       yMin = min( yMin, bfields(iF)%yMin )
+       yMax = max( yMax, bfields(iF)%yMax )
+       zMin = min( zMin, bfields(iF)%zMin )
+       zMax = max( zMax, bfields(iF)%zMax )
+       dx   = min(   dx, bfields(iF)%dx   )
+       dy   = min(   dy, bfields(iF)%dy   )
+       dz   = min(   dz, bfields(iF)%dz   )
+    enddo
+    xLeng   = xMax - xMin
+    yLeng   = yMax - yMin
+    zLeng   = zMax - zMin
+    
+    if ( dx.eq.0.d0 ) then
+       dxInv = 0.d0
+    else
+       dxInv = 1.d0 / dx
+    endif
+    if ( dy.eq.0.d0 ) then
+       dyInv = 0.d0
+    else
+       dyInv = 1.d0 / dy
+    endif
+    if ( dz.eq.0.d0 ) then
+       dzInv = 0.d0
+    else
+       dzInv = 1.d0 / dz
+    endif
+    
+    ! ------------------------------------------------------ !
+    ! --- [2] check BMax                                 --- !
+    ! ------------------------------------------------------ !
+    BMax = -1.d0
+    do iF=1, nBField
+       do k=1, bfields(iF)%LK
+          do j=1, bfields(iF)%LJ
+             do i=1, bfields(iF)%LI
+                BMax =  max( BMax, sqrt( bfields(iF)%EBf(fx_,i,j,k)**2 + &
+                     &                   bfields(iF)%EBf(fy_,i,j,k)**2 + &
+                     &                   bfields(iF)%EBf(fz_,i,j,k)**2 ) )
+             enddo
+          enddo
+       enddo
+    enddo
+
+    ! ------------------------------------------------------ !
+    ! --- [3] display variables                          --- !
+    ! ------------------------------------------------------ !
+    write(6,"(a)"            ) "[check__scale_of_variables]    ========  [check variables]  ======== "
+    write(6,"(a,16x,a,e15.8)") "xMin" ,  " :: ", xMin
+    write(6,"(a,16x,a,e15.8)") "xMax" ,  " :: ", xMax
+    write(6,"(a,16x,a,e15.8)") "yMin" ,  " :: ", yMin
+    write(6,"(a,16x,a,e15.8)") "yMax" ,  " :: ", yMax
+    write(6,"(a,16x,a,e15.8)") "zMin" ,  " :: ", zMin
+    write(6,"(a,16x,a,e15.8)") "zMax" ,  " :: ", zMax
+    write(6,"(a,15x,a,e15.8)") "xLeng",  " :: ", xLeng
+    write(6,"(a,15x,a,e15.8)") "yLeng",  " :: ", yLeng
+    write(6,"(a,15x,a,e15.8)") "zLeng",  " :: ", zLeng
+    write(6,"(a,18x,a,e15.8)") "dx"   ,  " :: ", dx
+    write(6,"(a,18x,a,e15.8)") "dy"   ,  " :: ", dy
+    write(6,"(a,18x,a,e15.8)") "dz"   ,  " :: ", dz
+    write(6,"(a,16x,a,e15.8)") "BMax" ,  " :: ", BMax
+    write(6,"(a)"            ) "[check__scale_of_variables]    ============================================== "    
+    
+    return
+  end subroutine check__scale_of_variables
+  
   
   ! ====================================================== !
   ! === initialize periodic field condition            === !
@@ -87,11 +159,12 @@ contains
     use variablesMod
     use rkgSolverMod
     implicit none
-
+    integer :: iF
+    
     ! ------------------------------------------------------ !
     ! --- [1] check simulation condition                 --- !
     ! ------------------------------------------------------ !
-    if ( ( LJ.ne.1 ).or.( yMin.ne.0.d0 ).or.( yMax.ne.0.d0 ) ) then
+    if ( ( yMin.ne.0.d0 ).or.( yMax.ne.0.d0 ) ) then
        write(6,"(a)") "[initialize__axisymmMode]  illegal coordinate  [ERROR]"
        write(6,*    ) "            :: flag__axisymmetry   :: ", flag__axisymmetry
        write(6,*    ) "            :: LJ   ( == 1 )       :: ", LJ
@@ -99,14 +172,20 @@ contains
        write(6,*    ) "            :: yMax ( == 0 )       :: ", yMax
        stop
     endif
-    if ( trim(FieldBoundary__y).eq."Neumann" ) then
-       ! --- nothing to do --- !
-    else
-       write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
-       write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
-       FieldBoundary__y = "Neumann"
-    endif
-    
+    do iF=1, nEField
+       if ( trim(efields(iF)%boundary_y).ne."Neumann" ) then
+          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
+          write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
+          efields(iF)%boundary_y = "Neumann"
+       endif
+    enddo
+    do iF=1, nBField
+       if ( trim(bfields(iF)%boundary_y).ne."Neumann" ) then
+          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
+          write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
+          bfields(iF)%boundary_y = "Neumann"
+       endif
+    enddo
     ! ------------------------------------------------------ !
     ! --- [2] particle coordinate ==> rtz                --- !
     ! ------------------------------------------------------ !
@@ -123,8 +202,6 @@ contains
   end subroutine initialize__axisymmMode
     
   
-
-
   ! ====================================================== !
   ! === Determination of dt                            === !
   ! ====================================================== !
@@ -143,20 +220,12 @@ contains
     dt_CFL = alpha_CFL / ( cv*dxInv + cv*dyInv + cv*dzInv )
 
     !  -- [1-2] dt  by cyclotron motion ( BField )       --  !
-    if ( flag__BField ) then
-       maxB   = 0.d0
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                absB = sqrt( EBf(bx_,i,j,k)**2 + EBf(by_,i,j,k)**2 + EBf(bz_,i,j,k)**2 )
-                maxB =  max( maxB, absB )
-             enddo
-          enddo
-       enddo
-       dt_wci = alpha_wci * ( twopi * Mp ) / ( qe * maxB )
+    if ( BMax.gt.0.d0 ) then
+       dt_wci = alpha_wci * ( twopi * Mp ) / ( qe * BMax )
+       
     else
        if ( ( trim( type__dt ).eq."wci_" ).or.( trim(type__dt).eq."mix_" ) ) then
-          write(6,"(a)") "[Determination__DT] No BField File, but dt is given by [ wci_ / mix_ ] mode " 
+          write(6,"(a)") "[Determination__DT] No BField File, but dt is given by [ wci_ / mix_ ] mode "
           stop
        endif
        dt_wci = 10.d0 * dt_CFL
@@ -232,3 +301,54 @@ contains
 
 
 end module initiatorMod
+
+
+
+    ! xLeng =  xMax - xMin
+    ! yLeng =  yMax - yMin
+    ! zLeng =  zMax - zMin
+
+    ! if ( flag__axisymmetry ) then
+    !    dx    = xLeng / dble( LI-1 )
+    !    dy    =  0.d0
+    !    dz    = zLeng / dble( LK-1 )
+    !    dxInv =  1.d0 / dx
+    !    dyInv =  0.d0
+    !    dzInv =  1.d0 / dz
+    ! else
+    !    dx    = xLeng / dble( LI-1 )
+    !    dy    = yLeng / dble( LJ-1 )
+    !    dz    = zLeng / dble( LK-1 )
+    !    dxInv =  1.d0 / dx
+    !    dyInv =  1.d0 / dy
+    !    dzInv =  1.d0 / dz
+    ! endif
+
+    ! write(6,"(a,15x,a,e15.8)") "xLeng",  " :: ", xLeng
+    ! write(6,"(a,15x,a,e15.8)") "yLeng",  " :: ", yLeng
+    ! write(6,"(a,15x,a,e15.8)") "zLeng",  " :: ", zLeng
+    ! write(6,"(a,18x,a,e15.8)") "dx"   ,  " :: ", dx
+    ! write(6,"(a,18x,a,e15.8)") "dy"   ,  " :: ", dy
+    ! write(6,"(a,18x,a,e15.8)") "dz"   ,  " :: ", dz
+    ! write(6,"(a,15x,a,e15.8)") "dxInv",  " :: ", dxInv
+    ! write(6,"(a,15x,a,e15.8)") "dyInv",  " :: ", dyInv
+    ! write(6,"(a,15x,a,e15.8)") "dzInv",  " :: ", dzInv
+
+    ! if ( flag__BField ) then
+    !    maxB   = 0.d0
+    !    do k=1, LK
+    !       do j=1, LJ
+    !          do i=1, LI
+    !             absB = sqrt( EBf(bx_,i,j,k)**2 + EBf(by_,i,j,k)**2 + EBf(bz_,i,j,k)**2 )
+    !             maxB =  max( maxB, absB )
+    !          enddo
+    !       enddo
+    !    enddo
+    !    dt_wci = alpha_wci * ( twopi * Mp ) / ( qe * maxB )
+    ! else
+    !    if ( ( trim( type__dt ).eq."wci_" ).or.( trim(type__dt).eq."mix_" ) ) then
+    !       write(6,"(a)") "[Determination__DT] No BField File, but dt is given by [ wci_ / mix_ ] mode " 
+    !       stop
+    !    endif
+    !    dt_wci = 10.d0 * dt_CFL
+    ! endif

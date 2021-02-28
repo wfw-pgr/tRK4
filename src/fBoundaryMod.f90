@@ -8,33 +8,73 @@ contains
   subroutine Field__Boundary
     use variablesMod
     implicit none
+    integer :: iF
 
     ! ------------------------------------------------------ !
     ! --- [1] x-Boundary                                 --- !
     ! ------------------------------------------------------ !
-    if      ( trim(FieldBoundary__x).eq."Neumann"  ) then
-       call fBoundary__Neumann ( "x" )
-    else if ( trim(FieldBoundary__x).eq."periodic" ) then
-       call fBoundary__periodic( "x" )
-    endif
+    do iF=1, nEField
+       if      ( trim( efields(iF)%boundary_x ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( efields(iF)%EBf, "x", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_x ).eq."periodic" ) then
+          call fBoundary__Periodic( efields(iF)%EBf, "x", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       end if
+    enddo
+    do iF=1, nBfield
+       if      ( trim( bfields(iF)%boundary_x ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( bfields(iF)%EBf, "x", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_x ).eq."periodic" ) then
+          call fBoundary__Periodic( bfields(iF)%EBf, "x", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       end if
+    enddo
 
     ! ------------------------------------------------------ !
     ! --- [2] y-Boundary                                 --- !
     ! ------------------------------------------------------ !
-    if      ( trim(FieldBoundary__y).eq."Neumann"  ) then
-       call fBoundary__Neumann ( "y" )
-    else if ( trim(FieldBoundary__y).eq."periodic" ) then
-       call fBoundary__periodic( "y" )
-    endif
+    do iF=1, nEField
+       if      ( trim( efields(iF)%boundary_y ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( efields(iF)%EBf, "y", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_y ).eq."periodic" ) then
+          call fBoundary__Periodic( efields(iF)%EBf, "y", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       end if
+    enddo
+    do iF=1, nBfield
+       if      ( trim( bfields(iF)%boundary_y ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( bfields(iF)%EBf, "y", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_y ).eq."periodic" ) then
+          call fBoundary__Periodic( bfields(iF)%EBf, "y", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       end if
+    enddo
 
     ! ------------------------------------------------------ !
     ! --- [3] z-Boundary                                 --- !
     ! ------------------------------------------------------ !
-    if      ( trim(FieldBoundary__z).eq."Neumann"  ) then
-       call fBoundary__Neumann ( "z" )
-    else if ( trim(FieldBoundary__z).eq."periodic" ) then
-       call fBoundary__periodic( "z" )
-    endif
+    do iF=1, nEField
+       if      ( trim( efields(iF)%boundary_z ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( efields(iF)%EBf, "z", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_z ).eq."periodic" ) then
+          call fBoundary__Periodic( efields(iF)%EBf, "z", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       end if
+    enddo
+    do iF=1, nBfield
+       if      ( trim( bfields(iF)%boundary_z ).eq."Neumann"  ) then
+          call fBoundary__Neumann ( bfields(iF)%EBf, "z", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_z ).eq."periodic" ) then
+          call fBoundary__Periodic( bfields(iF)%EBf, "z", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       end if
+    enddo
 
     return
   end subroutine Field__Boundary
@@ -43,50 +83,44 @@ contains
   ! ====================================================== !
   ! === Field Boundary :: Neumann                      === !
   ! ====================================================== !
-  subroutine fBoundary__Neumann( boundary )
+  subroutine fBoundary__Neumann( EBh, boundary, LIh, LJh, LKh )
     use variablesMod
-    character(1), intent(in) :: boundary
+    implicit none
+    integer         , intent(in)    :: LIh, LJh, LKh
+    character(1)    , intent(in)    :: boundary
+    double precision, intent(inout) :: EBh(6,-2:LIh+3,-2:LJh+3,-2:LKh+3)
 
     if ( boundary.eq."x" ) then
        ! -- xMin side -- !
-       EBf(:,   0,:,:) = EBf(:, 1,:,:)
-       EBf(:,  -1,:,:) = EBf(:, 1,:,:)
-       EBf(:,  -2,:,:) = EBf(:, 1,:,:)
+       EBh(:,    0,:,:) = EBh(:,  1,:,:)
+       EBh(:,   -1,:,:) = EBh(:,  1,:,:)
+       EBh(:,   -2,:,:) = EBh(:,  1,:,:)
        ! -- xMax side -- !
-       EBf(:,LI+1,:,:) = EBf(:,LI,:,:)
-       EBf(:,LI+2,:,:) = EBf(:,LI,:,:)
-       EBf(:,LI+3,:,:) = EBf(:,LI,:,:)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: Neumann "
-       endif
+       EBh(:,LIh+1,:,:) = EBh(:,LIh,:,:)
+       EBh(:,LIh+2,:,:) = EBh(:,LIh,:,:)
+       EBh(:,LIh+3,:,:) = EBh(:,LIh,:,:)
     endif
 
     if ( boundary.eq."y" ) then
        ! -- yMin side -- !
-       EBf(:,:,   0,:) = EBf(:,:, 1,:)
-       EBf(:,:,  -1,:) = EBf(:,:, 1,:)
-       EBf(:,:,  -2,:) = EBf(:,:, 1,:)
+       EBh(:,:,    0,:) = EBh(:,:,  1,:)
+       EBh(:,:,   -1,:) = EBh(:,:,  1,:)
+       EBh(:,:,   -2,:) = EBh(:,:,  1,:)
        ! -- yMax side -- !
-       EBf(:,:,LJ+1,:) = EBf(:,:,LJ,:)
-       EBf(:,:,LJ+2,:) = EBf(:,:,LJ,:)
-       EBf(:,:,LJ+3,:) = EBf(:,:,LJ,:)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: Neumann "
-       endif
+       EBh(:,:,LJh+1,:) = EBh(:,:,LJh,:)
+       EBh(:,:,LJh+2,:) = EBh(:,:,LJh,:)
+       EBh(:,:,LJh+3,:) = EBh(:,:,LJh,:)
     endif
 
     if ( boundary.eq."z" ) then
        ! -- zMin side -- !
-       EBf(:,:,:,   0) = EBf(:,:,:, 1)
-       EBf(:,:,:,  -1) = EBf(:,:,:, 1)
-       EBf(:,:,:,  -2) = EBf(:,:,:, 1)
+       EBh(:,:,:,    0) = EBh(:,:,:,  1)
+       EBh(:,:,:,   -1) = EBh(:,:,:,  1)
+       EBh(:,:,:,   -2) = EBh(:,:,:,  1)
        ! -- zMax side -- !
-       EBf(:,:,:,LK+1) = EBf(:,:,:,LK)
-       EBf(:,:,:,LK+2) = EBf(:,:,:,LK)
-       EBf(:,:,:,LK+3) = EBf(:,:,:,LK)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: Neumann "
-       endif
+       EBh(:,:,:,LKh+1) = EBh(:,:,:,LKh)
+       EBh(:,:,:,LKh+2) = EBh(:,:,:,LKh)
+       EBh(:,:,:,LKh+3) = EBh(:,:,:,LKh)
     endif
     return
   end subroutine fBoundary__Neumann
@@ -95,51 +129,46 @@ contains
   ! ====================================================== !
   ! === Field Boundary :: periodic                     === !
   ! ====================================================== !
-  subroutine fBoundary__periodic( boundary )
+  subroutine fBoundary__periodic( EBh, boundary, LIh, LJh, LKh )
     use variablesMod
-    character(1), intent(in) :: boundary
+    implicit none
+    integer         , intent(in)    :: LIh, LJh, LKh
+    character(1)    , intent(in)    :: boundary
+    double precision, intent(inout) :: EBh(6,-2:LIh+3,-2:LJh+3,-2:LKh+3)
     
     if ( boundary.eq."x" ) then
        ! -- xMin side -- !
-       EBf(:,   0,:,:) = EBf(:,LI  ,:,:)
-       EBf(:,  -1,:,:) = EBf(:,LI-1,:,:)
-       EBf(:,  -2,:,:) = EBf(:,LI-2,:,:)
+       EBh(:,    0,:,:) = EBh(:,LIh  ,:,:)
+       EBh(:,   -1,:,:) = EBh(:,LIh-1,:,:)
+       EBh(:,   -2,:,:) = EBh(:,LIh-2,:,:)
        ! -- xMax side -- !
-       EBf(:,LI+1,:,:) = EBf(:,   1,:,:)
-       EBf(:,LI+2,:,:) = EBf(:,   2,:,:)
-       EBf(:,LI+3,:,:) = EBf(:,   3,:,:)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: x :: periodic "
-       endif
+       EBh(:,LIh+1,:,:) = EBh(:,    1,:,:)
+       EBh(:,LIh+2,:,:) = EBh(:,    2,:,:)
+       EBh(:,LIh+3,:,:) = EBh(:,    3,:,:)
     endif
 
     if ( boundary.eq."y" ) then
        ! -- yMin side -- !
-       EBf(:,:,   0,:) = EBf(:,:,LJ  ,:)
-       EBf(:,:,  -1,:) = EBf(:,:,LJ-1,:)
-       EBf(:,:,  -2,:) = EBf(:,:,LJ-2,:)
+       EBh(:,:,    0,:) = EBh(:,:,LJh  ,:)
+       EBh(:,:,   -1,:) = EBh(:,:,LJh-1,:)
+       EBh(:,:,   -2,:) = EBh(:,:,LJh-2,:)
        ! -- yMax side -- !
-       EBf(:,:,LJ+1,:) = EBf(:,:,   1,:)
-       EBf(:,:,LJ+2,:) = EBf(:,:,   2,:)
-       EBf(:,:,LJ+3,:) = EBf(:,:,   3,:)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: y :: periodic "
-       endif
+       EBh(:,:,LJh+1,:) = EBh(:,:,    1,:)
+       EBh(:,:,LJh+2,:) = EBh(:,:,    2,:)
+       EBh(:,:,LJh+3,:) = EBh(:,:,    3,:)
     endif
 
     if ( boundary.eq."z" ) then
        ! -- zMin side -- !
-       EBf(:,:,:,   0) = EBf(:,:,:,LK  )
-       EBf(:,:,:,  -1) = EBf(:,:,:,LK-1)
-       EBf(:,:,:,  -2) = EBf(:,:,:,LK-2)
+       EBh(:,:,:,    0) = EBh(:,:,:,LKh  )
+       EBh(:,:,:,   -1) = EBh(:,:,:,LKh-1)
+       EBh(:,:,:,   -2) = EBh(:,:,:,LKh-2)
        ! -- zMax side -- !
-       EBf(:,:,:,LK+1) = EBf(:,:,:,   1)
-       EBf(:,:,:,LK+2) = EBf(:,:,:,   2)
-       EBf(:,:,:,LK+3) = EBf(:,:,:,   3)
-       if ( flag__BoundaryMessage ) then
-          write(6,"(a)") "[fBoundary__Neumann] Field Boundary :: z :: periodic "
-       endif
+       EBh(:,:,:,LKh+1) = EBh(:,:,:,    1)
+       EBh(:,:,:,LKh+2) = EBh(:,:,:,    2)
+       EBh(:,:,:,LKh+3) = EBh(:,:,:,    3)
     endif
+    
     return
   end subroutine fBoundary__periodic
 

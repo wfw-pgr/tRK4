@@ -1,5 +1,19 @@
 module variablesMod
   implicit none
+
+  type field
+     integer                       :: LI, LJ, LK
+     character(10)                 :: boundary_x, boundary_y, boundary_z
+     character(3)                  :: modulation_type
+     double precision              :: dx, dy, dz, dxInv, dyInv, dzInv
+     double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
+     double precision              :: modulation
+     double precision, allocatable :: EBf(:,:,:,:)
+  end type field
+
+  integer                       :: nBField, nEField
+  type(field), allocatable      :: bfields(:), efields(:)
+  
   integer         , parameter   :: cLen              = 300
   integer         , parameter   :: lun               = 50
   integer         , parameter   :: buffLength        = 100
@@ -27,6 +41,7 @@ module variablesMod
   character(cLen)               :: popoutFile, bpmFile
   character(cLen)               :: particleFile
   character(cLen)               :: trackFileBase, probeFileBase
+  character(cLen)               :: EFieldListFile, BFieldListFile
 
   logical                       :: flag__EField
   logical                       :: flag__BField
@@ -38,6 +53,7 @@ module variablesMod
   logical                       :: flag__probeField
   logical                       :: flag__popoutBoundary
   logical                       :: flag__beamposmonitor
+  logical                       :: flag__modulateField
 
   character(cLen)               :: FieldBoundary__x, FieldBoundary__y, FieldBoundary__z
   character(cLen)               :: particleBoundary__x, particleBoundary__y, particleBoundary__z
@@ -45,6 +61,7 @@ module variablesMod
   double precision              :: qm
   double precision              :: dt, dx, dy, dz, dxInv, dyInv, dzInv
   double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
+  double precision              :: BMax
   double precision              :: xLeng, yLeng, zLeng
   double precision              :: freq, phase_delay
   double precision              :: efield_factor, bfield_factor
@@ -65,6 +82,7 @@ module variablesMod
   integer         , parameter   :: xp_=1, yp_=2, zp_=3, vx_=4 , vy_=5 , vz_=6
   integer         , parameter   :: xo_=7, yo_=8, zo_=9, ux_=10, uy_=11, uz_=12, wt_=13
   integer         , parameter   :: ex_=1, ey_=2, ez_=3, bx_=4 , by_=5 , bz_=6
+  integer         , parameter   :: fx_=4, fy_=5, fz_=6
 
   
 

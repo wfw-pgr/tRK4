@@ -95,4 +95,24 @@ contains
   end subroutine show__endLogo
 
 
+  ! ====================================================== !
+  ! === count number of lines                          === !
+  ! ====================================================== !
+  subroutine count__nlines( FileName, count )
+    use variablesMod
+    implicit none
+    character(cLen) :: FileName
+    integer         :: count
+    
+    open(lun,file=trim(FileName),status='old')
+    count = 0
+    do
+       read(lun,*,end=100)
+       count = count + 1
+    end do
+100 close(lun)
+    return
+  end subroutine count__nlines
+  
+
 end module utilitiesMod

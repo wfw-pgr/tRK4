@@ -12,11 +12,11 @@ contains
 
     namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
          &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
-         &                popoutFile, bpmFile,                                              &
+         &                popoutFile, bpmFile, EFieldListFile, BFieldListFile,              &
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
          &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
          &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
-         &                flag__beamposmonitor,                                             &
+         &                flag__beamposmonitor, flag__modulateField,                        &
          &                efield_factor, bfield_factor,                                     &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
@@ -87,394 +87,322 @@ contains
     
     return
   end subroutine load__particles
-  
+
 
   ! ====================================================== !
-  ! === load BField from external File                 === !
+  ! === load ebfields from external file               === !
   ! ====================================================== !
-  subroutine load__BFieldFile
+  subroutine load__ebFieldFile
     use variablesMod
+    use utilitiesMod
     implicit none
-    integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+    integer                       :: i, j, k, iF, LIr, LJr, LKr, nCmpr
     character(cLen)               :: cmt
     double precision              :: xg(3)
+    double precision              :: xMin_, xMax_, yMin_, yMax_, zMin_, zMax_
+    character(cLen), allocatable  :: eFieldFiles(:), bFieldFiles(:)
 
     ! ------------------------------------------------------ !
     ! --- [1] Preparation                                --- !
     ! ------------------------------------------------------ !
     write(6,*)
-    write(6,"(a,a)") "[load__BFieldFile]  BFieldFile :: ", trim( BFieldFile )
-    write(6,"(a)",advance="no" ) "[load__BFieldFile]  loading BField.... "
+    write(6,"(a,a)")  "[load__ebFieldFile]  eFieldListFile   :: ", trim( EFieldListFile )
+    write(6,"(a,a)")  "[load__ebFieldFile]  bFieldListFile   :: ", trim( BFieldListFile )
+    write(6,*)
+    call count__nlines( EFieldListFile, nEField )
+    call count__nlines( BFieldListFile, nBField )
+    write(6,"(a,i8)") "[load__ebFieldFile]  #. of eFieldFile :: ", nEField
+    write(6,"(a,i8)") "[load__ebFieldFile]  #. of bFieldFile :: ", nBField
+    write(6,*)
+
+    allocate( efields(nEField) )
+    allocate( bfields(nBField) )
     
-    ! ------------------------------------------------------ !
-    ! --- [2] point (Text) File Type case                --- !
-    ! ------------------------------------------------------ !
-    if ( trim(type__BFieldFile).eq."point" ) then
-       open (lun,file=trim(BFieldFile),status="old",form="formatted")
-       read (lun,*) cmt
-       read (lun,*) cmt
-       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-          write(6,*)
-          write(6,*) "[load__BFieldFile] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-          stop
-       endif
-       if ( .not.( allocated( EBf ) ) ) then
-          allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-       endif
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                read(lun,*) xg(1:3), EBf(4:6,i,j,k)
-             enddo
-          enddo
-       enddo
-       close(lun)
-    else
-       write(6,*)
-       write(6,*)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*) "[load__BFieldFile] cannot find BFieldFile [ERROR]  :: ", trim(BFieldFile)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*)
-       write(6,*)
-       stop
-    endif
+    xMin = + 1.e10
+    xMax = - 1.e10
+    yMin = + 1.e10
+    yMax = - 1.e10
+    zMin = + 1.e10
+    zMax = - 1.e10
 
     ! ------------------------------------------------------ !
-    ! --- [3] post process                               --- !
+    ! --- [2] obtain FileName List                       --- !
     ! ------------------------------------------------------ !
-    do k=1, LK
-       do j=1, LJ
-          do i=1, LI
-             EBf(bx_:bz_,i,j,k) = bfield_factor * EBf(bx_:bz_,i,j,k)
-          enddo
-       enddo
+    !  -- [2-1] EField FileName List                     --  !
+    allocate( eFieldFiles(nEField), bFieldFiles(nBField) )
+    open(lun,file=trim(EFieldListFile),status="old") 
+    do iF=1, nEField
+       read(lun,"(a)") eFieldFiles(iF)
     enddo
-    write(6,"(a)",advance="yes") "[Done]"
+    close(lun)
+    !  -- [2-2] BField FileName List                     --  !
+    open(lun,file=trim(BFieldListFile),status="old") 
+    do iF=1, nBField
+       read(lun,"(a)") bFieldFiles(iF)
+    enddo
+    close(lun)
+    !  -- [2-3] BField FileName List                     --  !
+    write(6,*)
+    write(6,"(a)") "[load__ebFieldFile] eFieldFiles >>> " 
+    do iF=1, nEField
+       write(6,"(a,a)") "[load__ebFieldFile]  FileName :: ", trim( eFieldFiles(iF) )
+    enddo
+    write(6,*)
+    !  -- [2-4] EField FileName List                     --  !
+    write(6,*)
+    write(6,"(a)") "[load__ebFieldFile] bFieldFiles >>> " 
+    do iF=1, nBField
+       write(6,"(a,a)") "[load__ebFieldFile]  FileName :: ", trim( bFieldFiles(iF) )
+    enddo
+    write(6,*)
+    write(6,*)
     write(6,*)
 
-    return
-  end subroutine load__BFieldFile
+    ! ------------------------------------------------------ !
+    ! --- [3] fetch EField Data                          --- !
+    ! ------------------------------------------------------ !
 
-  
-  ! ====================================================== !
-  ! === load EField from external File                 === !
-  ! ====================================================== !
-  subroutine load__EFieldFile
-    use variablesMod
-    implicit none
-    integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
-    character(cLen)               :: cmt
-    double precision              :: xg(3)
-
-    ! ------------------------------------------------------ !
-    ! --- [1] Preparation                                --- !
-    ! ------------------------------------------------------ !
-    write(6,*)
-    write(6,"(a,a)") "[load__EFieldFile]  EFieldFile :: ", trim( EFieldFile )
-    write(6,"(a)",advance="no" ) "[load__EFieldFile]  loading EField.... "
-
-    ! ------------------------------------------------------ !
-    ! --- [2] point (Text) File Type case                --- !
-    ! ------------------------------------------------------ !
-    if ( trim(type__EFieldFile).eq."point" ) then
-       open (lun,file=trim(EFieldFile),status="old",form="formatted")
+    do iF=1, nEField
+       
+       !  -- [3-1] EField Data File Name                 --  !
+       write(6,"(a,a)") "[load__EFieldFile]  EFieldFile :: ", trim( eFieldFiles(iF) )
+       write(6,"(a)",advance="no" ) "[load__EFieldFile]  loading EField.... "
+       
+       !  -- [3-2] fetch EField Data                     --  !
+       open (lun,file=trim(eFieldFiles(iF)),status="old",form="formatted")
+       
+       !  -- [3-3] get Field shape information           --  !
        read (lun,*) cmt
        read (lun,*) cmt
        read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-          write(6,*)
-          write(6,*) "[load__EFieldFile] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-          stop
-       endif
-       if ( .not.( allocated( EBf ) ) ) then
-          allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-       endif
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                read(lun,*) xg(1:3), EBf(1:3,i,j,k)
+       efields(iF)%LI = LIr
+       efields(iF)%LJ = LJr
+       efields(iF)%LK = LKr
+       
+       !  -- [3-4] fetch field information               --  !
+       allocate( efields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
+       efields(iF)%EBf(:,:,:,:) = 0.d0
+       do k=1, LKr
+          do j=1, LJr
+             do i=1, LIr
+                read(lun,*) efields(iF)%EBf(1:6,i,j,k)
              enddo
           enddo
        enddo
-       close(lun)
-    else
-       write(6,*)
-       write(6,*)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*) "[load__EFieldFile] cannot find EFieldFile [ERROR]  :: ", trim(EFieldFile)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*)
-       write(6,*)
-       stop
-    endif
 
-    ! ------------------------------------------------------ !
-    ! --- [3] post process                               --- !
-    ! ------------------------------------------------------ !
-    do k=1, LK
-       do j=1, LJ
-          do i=1, LI
-             EBf(ex_:ez_,i,j,k) = efield_factor * EBf(ex_:ez_,i,j,k)
+       close(lun)
+
+       !  -- [3-5] get bounding coordinate of the field  --  !
+       xMin_ = efields(iF)%EBf(xp_,1,1,1)
+       xMax_ = efields(iF)%EBf(xp_,1,1,1)
+       yMin_ = efields(iF)%EBf(yp_,1,1,1)
+       yMax_ = efields(iF)%EBf(yp_,1,1,1)
+       zMin_ = efields(iF)%EBf(zp_,1,1,1)
+       zMax_ = efields(iF)%EBf(zp_,1,1,1)
+       do i=1, LIr
+          xMin_ = min( xMin_, efields(iF)%EBf(xp_,i,1,1) )
+          xMax_ = max( xMax_, efields(iF)%EBf(xp_,i,1,1) )
+       enddo
+       do j=1, LJr
+          yMin_ = min( yMin_, efields(iF)%EBf(yp_,1,j,1) )
+          yMax_ = max( yMax_, efields(iF)%EBf(yp_,1,j,1) )
+       enddo
+       do k=1, LKr
+          zMin_ = min( zMin_, efields(iF)%EBf(zp_,1,1,k) )
+          zMax_ = max( zMax_, efields(iF)%EBf(zp_,1,1,k) )
+       enddo
+       efields(iF)%xMin = xMin_
+       efields(iF)%xMax = xMax_
+       efields(iF)%yMin = yMin_
+       efields(iF)%yMax = yMax_
+       efields(iF)%zMin = zMin_
+       efields(iF)%zMax = zMax_
+       if ( flag__axisymmetry ) then
+          efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+          efields(iF)%dy    =   0.d0
+          efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+          efields(iF)%dxInv = 1.d0 / efields(iF)%dx
+          efields(iF)%dyInv =   0.d0
+          efields(iF)%dzInv = 1.d0 / efields(iF)%dz
+       else
+          efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+          efields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+          efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+          efields(iF)%dxInv = 1.d0 / efields(iF)%dx
+          efields(iF)%dyInv = 1.d0 / efields(iF)%dy
+          efields(iF)%dzInv = 1.d0 / efields(iF)%dz
+       endif
+       xMin = min( xMin_, xMin )
+       xMax = max( xMax_, xMax )
+       yMin = min( yMin_, yMin )
+       yMax = max( yMax_, yMax )
+       zMin = min( zMin_, zMin )
+       zMax = max( zMax_, zMax )
+       
+       !  -- [3-6] amplitude modification                --  !
+       do k=1, LKr
+          do j=1, LJr
+             do i=1, LIr
+                efields(iF)%EBf(fx_:fz_,i,j,k) = efield_factor * efields(iF)%EBf(fx_:fz_,i,j,k)
+             enddo
           enddo
        enddo
+       write(6,"(a)",advance="yes") "[Done]"
+       !  -- [3-7] time modulation                       --  !
+       efields(iF)%modulation = 1.d0
+       
+       !  -- [3-8] boundary                        --  !
+       efields(iF)%boundary_x = "Neumann"
+       efields(iF)%boundary_y = "Neumann"
+       efields(iF)%boundary_z = "Neumann"
+
+       write(6,"(a)")       " ---------------- EField -------------------- "
+       write(6,"(a,i8)"   ) "         LI :: ", efields(iF)%LI
+       write(6,"(a,i8)"   ) "         LJ :: ", efields(iF)%LJ
+       write(6,"(a,i8)"   ) "         LK :: ", efields(iF)%LK
+       write(6,"(a,f15.8)") "       xMin :: ", efields(iF)%xMin
+       write(6,"(a,f15.8)") "       xMax :: ", efields(iF)%xMax
+       write(6,"(a,f15.8)") "       yMin :: ", efields(iF)%yMin
+       write(6,"(a,f15.8)") "       yMax :: ", efields(iF)%yMax
+       write(6,"(a,f15.8)") "       zMin :: ", efields(iF)%zMin
+       write(6,"(a,f15.8)") "       zMax :: ", efields(iF)%zMax
+       write(6,"(a,f15.8)") "         dx :: ", efields(iF)%dx
+       write(6,"(a,f15.8)") "         dy :: ", efields(iF)%dy
+       write(6,"(a,f15.8)") "         dz :: ", efields(iF)%dz
+       write(6,"(a,f15.8)") "      dxInv :: ", efields(iF)%dxInv
+       write(6,"(a,f15.8)") "      dyInv :: ", efields(iF)%dyInv
+       write(6,"(a,f15.8)") "      dzInv :: ", efields(iF)%dzInv
+       write(6,"(a)")       " -------------------------------------------- "
+       
+    enddo
+    write(6,*)
+    write(6,*)
+
+    ! ------------------------------------------------------ !
+    ! --- [4] fetch BField Data                          --- !
+    ! ------------------------------------------------------ !
+    
+    do iF=1, nBField
+       
+       !  -- [4-1] BField Data File Name                 --  !
+       write(6,"(a,a)") "[load__BFieldFile]  BfieldFile :: ", trim( bfieldFiles(iF) )
+       write(6,"(a)",advance="no" ) "[load__BfieldFile]  loading Bfield.... "
+       
+       !  -- [4-2] fetch Bfield Data                     --  !
+       open (lun,file=trim(bfieldFiles(iF)),status="old",form="formatted")
+       
+       !  -- [4-3] get Field shape information           --  !
+       read (lun,*) cmt
+       read (lun,*) cmt
+       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+       bfields(iF)%LI = LIr
+       bfields(iF)%LJ = LJr
+       bfields(iF)%LK = LKr
+       
+       !  -- [4-4] fetch field information               --  !
+       allocate( bfields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
+       bfields(iF)%EBf(:,:,:,:) = 0.d0
+       do k=1, LKr
+          do j=1, LJr
+             do i=1, LIr
+                read(lun,*) bfields(iF)%EBf(1:6,i,j,k)
+             enddo
+          enddo
+       enddo
+
+       close(lun)
+
+       !  -- [4-5] get bounding coordinate of the field  --  !
+       xMin_ = bfields(iF)%EBf(xp_,1,1,1)
+       xMax_ = bfields(iF)%EBf(xp_,1,1,1)
+       yMin_ = bfields(iF)%EBf(yp_,1,1,1)
+       yMax_ = bfields(iF)%EBf(yp_,1,1,1)
+       zMin_ = bfields(iF)%EBf(zp_,1,1,1)
+       zMax_ = bfields(iF)%EBf(zp_,1,1,1)
+       do i=1, LIr
+          xMin_ = min( xMin_, bfields(iF)%EBf(xp_,i,1,1) )
+          xMax_ = max( xMax_, bfields(iF)%EBf(xp_,i,1,1) )
+       enddo
+       do j=1, LJr
+          yMin_ = min( yMin_, bfields(iF)%EBf(yp_,1,j,1) )
+          yMax_ = max( yMax_, bfields(iF)%EBf(yp_,1,j,1) )
+       enddo
+       do k=1, LKr
+          zMin_ = min( zMin_, bfields(iF)%EBf(zp_,1,1,k) )
+          zMax_ = max( zMax_, bfields(iF)%EBf(zp_,1,1,k) )
+       enddo
+       bfields(iF)%xMin = xMin_
+       bfields(iF)%xMax = xMax_
+       bfields(iF)%yMin = yMin_
+       bfields(iF)%yMax = yMax_
+       bfields(iF)%zMin = zMin_
+       bfields(iF)%zMax = zMax_
+       if ( flag__axisymmetry ) then
+          bfields(iF)%dx   = ( xMax_ - xMin_ ) / dble( LIr-1 )
+          bfields(iF)%dy   =   0.d0
+          bfields(iF)%dz   = ( zMax_ - zMin_ ) / dble( LKr-1 )
+          bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
+          bfields(iF)%dyInv = 0.d0
+          bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz          
+       else
+          bfields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+          bfields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+          bfields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+          bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
+          bfields(iF)%dyInv = 1.d0 / bfields(iF)%dy
+          bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz
+
+       endif
+
+       xMin = min( xMin_, xMin )
+       xMax = max( xMax_, xMax )
+       yMin = min( yMin_, yMin )
+       yMax = max( yMax_, yMax )
+       zMin = min( zMin_, zMin )
+       zMax = max( zMax_, zMax )
+       
+       !  -- [4-6] amplitude modification                --  !
+       do k=1, LKr
+          do j=1, LJr
+             do i=1, LIr
+                bfields(iF)%EBf(fx_:fz_,i,j,k) = bfield_factor * bfields(iF)%EBf(fx_:fz_,i,j,k)
+             enddo
+          enddo
+       enddo
+       !  -- [4-7] time modulation                       --  !
+       bfields(iF)%modulation = 1.d0
+       
+       write(6,"(a)",advance="yes") "[Done]"
+
+       !  -- [temporary] -- !
+       bfields(iF)%boundary_x = "Neumann"
+       bfields(iF)%boundary_y = "Neumann"
+       bfields(iF)%boundary_z = "Neumann"
+
+       write(6,"(a)")       " ---------------- BField -------------------- "
+       write(6,"(a,i8)"   ) "         LI :: ", bfields(iF)%LI
+       write(6,"(a,i8)"   ) "         LJ :: ", bfields(iF)%LJ
+       write(6,"(a,i8)"   ) "         LK :: ", bfields(iF)%LK
+       write(6,"(a,f15.8)") "       xMin :: ", bfields(iF)%xMin
+       write(6,"(a,f15.8)") "       xMax :: ", bfields(iF)%xMax
+       write(6,"(a,f15.8)") "       yMin :: ", bfields(iF)%yMin
+       write(6,"(a,f15.8)") "       yMax :: ", bfields(iF)%yMax
+       write(6,"(a,f15.8)") "       zMin :: ", bfields(iF)%zMin
+       write(6,"(a,f15.8)") "       zMax :: ", bfields(iF)%zMax
+       write(6,"(a,f15.8)") "         dx :: ", bfields(iF)%dx
+       write(6,"(a,f15.8)") "         dy :: ", bfields(iF)%dy
+       write(6,"(a,f15.8)") "         dz :: ", bfields(iF)%dz
+       write(6,"(a,f15.8)") "      dxInv :: ", bfields(iF)%dxInv
+       write(6,"(a,f15.8)") "      dyInv :: ", bfields(iF)%dyInv
+       write(6,"(a,f15.8)") "      dzInv :: ", bfields(iF)%dzInv
+       write(6,"(a)")       " -------------------------------------------- "
+       
+
+       
     enddo
     
-    write(6,"(a)",advance="yes") "[Done]"
-    write(6,*)
-    
     return
-  end subroutine load__EFieldFile
-
-
-  
-  ! ====================================================== !
-  ! === load standing wave eigenmode                   === !
-  ! ====================================================== !
-  subroutine load__swEigenMode
-    use variablesMod
-    implicit none
-    integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
-    character(cLen)               :: cmt
-    double precision              :: xg(3)
-
-    ! ------------------------------------------------------ !
-    ! --- [1] Preparation                                --- !
-    ! ------------------------------------------------------ !
-
-    write(6,*)
-    write(6,"(a)"  ) "[load__swEigenMode]  allocate Em1 :: EigenMode buffer 1."
-    write(6,*)
-    allocate( Em1(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-    Em1(:,:,:,:) = 0.d0
-    
-    write(6,*)
-    write(6,"(a,a)") "[load__swEigenMode]  EFieldFile (e) :: ", trim( EFieldFile )
-    write(6,"(a,a)") "[load__swEigenMode]  BFieldFile (b) :: ", trim( BFieldFile )
-    write(6,*)
-
-    ! ------------------------------------------------------ !
-    ! --- [2] point (Text) File Type case ( mode1 : e )  --- !
-    ! ------------------------------------------------------ !
-
-    if ( flag__EField ) then
-    
-       write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading EField.... "
-
-       if ( trim(type__EFieldFile).eq."point" ) then
-
-          !  -- [2-1] mode 1                                --  !
-          open (lun,file=trim(EFieldFile),status="old",form="formatted")
-          read (lun,*) cmt
-          read (lun,*) cmt
-          read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-          if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-             write(6,*)
-             write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-             stop
-          endif
-          do k=1, LK
-             do j=1, LJ
-                do i=1, LI
-                   read(lun,*) xg(1:3), Em1(ex_:ez_,i,j,k)
-                enddo
-             enddo
-          enddo
-          close(lun)
-
-       else
-          write(6,*)
-          write(6,*)
-          write(6,*) "-----------------------------------------------------------------"
-          write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(EFieldFile)
-          write(6,*) "-----------------------------------------------------------------"
-          write(6,*)
-          write(6,*)
-          stop
-       endif
-
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                Em1(ex_:ez_,i,j,k) = efield_factor * Em1(ex_:ez_,i,j,k)
-             enddo
-          enddo
-       enddo
-
-       write(6,"(a)",advance="yes") "[Done]"
-       write(6,*)
-
-    endif
-       
-    ! ------------------------------------------------------ !
-    ! --- [3] point (Text) File Type case ( mode1 : b )  --- !
-    ! ------------------------------------------------------ !
-
-    if ( flag__BField ) then
-    
-       write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading BField.... "
-
-       if ( trim(type__BFieldFile).eq."point" ) then
-
-          open (lun,file=trim(BFieldFile),status="old",form="formatted")
-          read (lun,*) cmt
-          read (lun,*) cmt
-          read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-          if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-             write(6,*)
-             write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-             stop
-          endif
-          do k=1, LK
-             do j=1, LJ
-                do i=1, LI
-                   read(lun,*) xg(1:3), Em1(bx_:bz_,i,j,k)
-                enddo
-             enddo
-          enddo
-          close(lun)
-
-       else
-          write(6,*)
-          write(6,*)
-          write(6,*) "-----------------------------------------------------------------"
-          write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(BFieldFile)
-          write(6,*) "-----------------------------------------------------------------"
-          write(6,*)
-          write(6,*)
-          stop
-       endif
-
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                Em1(bx_:bz_,i,j,k) = bfield_factor * Em1(bx_:bz_,i,j,k)
-             enddo
-          enddo
-       enddo
-       
-       write(6,"(a)",advance="yes") "[Done]"
-       write(6,*)
-
-    endif
-    
-    ! ------------------------------------------------------ !
-    ! --- [4] set flags                                  --- !
-    ! ------------------------------------------------------ !
-    if ( .not.( allocated( EBf ) ) ) then
-       allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-    endif
-    
-    ! ------------------------------------------------------ !
-    ! --- [5] set flags                                  --- !
-    ! ------------------------------------------------------ !
-    flag__EField          = .false.
-    flag__BField          = .false.
-    flag__BoundaryMessage = .false.
-        
-    return
-  end subroutine load__swEigenMode
-  
-
-  ! ====================================================== !
-  ! === load travelling wave eigenmode                 === !
-  ! ====================================================== !
-  subroutine load__twEigenMode
-    use variablesMod
-    implicit none
-    integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
-    character(cLen)               :: cmt
-    double precision              :: xg(3)
-
-    ! ------------------------------------------------------ !
-    ! --- [1] Preparation                                --- !
-    ! ------------------------------------------------------ !
-    write(6,*)
-    write(6,"(a,a)") "[load__twEigenMode]  twEigenFile1 :: ", trim( twEigenFile1 )
-    write(6,"(a,a)") "[load__twEigenMode]  twEigenFile2 :: ", trim( twEigenFile2 )
-    write(6,"(a)",advance="no" ) "[load__twEigenMode]  loading EField.... "
-
-    ! ------------------------------------------------------ !
-    ! --- [2] point (Text) File Type case ( mode1 )      --- !
-    ! ------------------------------------------------------ !
-    if ( trim(type__EFieldFile).eq."point" ) then
-       
-       !  -- [2-1] mode 1                                --  !
-       open (lun,file=trim(twEigenFile1),status="old",form="formatted")
-       read (lun,*) cmt
-       read (lun,*) cmt
-       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-          write(6,*)
-          write(6,*) "[load__twEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-          stop
-       endif
-       if ( .not.( allocated( Em1 ) ) ) then
-          allocate( Em1(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-       endif
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                read(lun,*) xg(1:3), Em1(1:3,i,j,k)
-             enddo
-          enddo
-       enddo
-       close(lun)
-       
-       !  -- [2-2] mode 2                                --  !
-       open (lun,file=trim(twEigenFile2),status="old",form="formatted")
-       read (lun,*) cmt
-       read (lun,*) cmt
-       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
-          write(6,*)
-          write(6,*) "[load__twEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
-          stop
-       endif
-       if ( .not.( allocated( Em2 ) ) ) then
-          allocate( Em2(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-       endif
-       do k=1, LK
-          do j=1, LJ
-             do i=1, LI
-                read(lun,*) xg(1:3), Em2(1:3,i,j,k)
-             enddo
-          enddo
-       enddo
-       close(lun)
-       
-       !  -- [2-3] EBf allocation                        --  !
-       if ( .not.( allocated( EBf ) ) ) then
-          allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
-       endif
-       
-    else
-       write(6,*)
-       write(6,*)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*) "[load__twEigenMode] cannot find twEigenFile [ERROR]  :: ", trim(twEigenFile1)
-       write(6,*) "[load__twEigenMode] cannot find twEigenFile [ERROR]  :: ", trim(twEigenFile2)
-       write(6,*) "-----------------------------------------------------------------"
-       write(6,*)
-       write(6,*)
-       stop
-    endif
-
-    ! ------------------------------------------------------ !
-    ! --- [4] set flags                                  --- !
-    ! ------------------------------------------------------ !
-    flag__EField          = .false.
-    flag__BoundaryMessage = .false.
-    
-    ! ------------------------------------------------------ !
-    ! --- [3] post process                               --- !
-    ! ------------------------------------------------------ !
-    write(6,"(a)",advance="yes") "[Done]"
-    write(6,*)
-    
-    return
-  end subroutine load__twEigenMode
+  end subroutine load__ebFieldFile
 
 
   ! ====================================================== !
@@ -591,10 +519,9 @@ contains
     
     return
   end subroutine save__particles
+  
 
 end module ioUtilityMod
-
-
 
 
 
@@ -658,3 +585,388 @@ end module ioUtilityMod
     ! read(lun,*)  cmt, cmt, t_probeStep
     ! read(lun,*)  cmt, cmt, t_probeEnd
 
+
+
+
+
+
+  ! ! ====================================================== !
+  ! ! === load BField from external File                 === !
+  ! ! ====================================================== !
+  ! subroutine load__BFieldFile
+  !   use variablesMod
+  !   implicit none
+  !   integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+  !   character(cLen)               :: cmt
+  !   double precision              :: xg(3)
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [1] Preparation                                --- !
+  !   ! ------------------------------------------------------ !
+  !   write(6,*)
+  !   write(6,"(a,a)") "[load__BFieldFile]  BFieldFile :: ", trim( BFieldFile )
+  !   write(6,"(a)",advance="no" ) "[load__BFieldFile]  loading BField.... "
+    
+  !   ! ------------------------------------------------------ !
+  !   ! --- [2] point (Text) File Type case                --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(type__EFieldFile).eq."point" ) then
+       
+  !      open (lun,file=trim(BFieldFile),status="old",form="formatted")
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !      if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !         write(6,*)
+  !         write(6,*) "[load__BFieldFile] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !         stop
+  !      endif
+  !      if ( .not.( allocated( EBf ) ) ) then
+  !         allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !      endif
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               read(lun,*) xg(1:3), EBf(4:6,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+  !      close(lun)
+       
+  !   endif
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [3] post process                               --- !
+  !   ! ------------------------------------------------------ !
+  !   do k=1, LK
+  !      do j=1, LJ
+  !         do i=1, LI
+  !            EBf(bx_:bz_,i,j,k) = bfield_factor * EBf(bx_:bz_,i,j,k)
+  !         enddo
+  !      enddo
+  !   enddo
+  !   write(6,"(a)",advance="yes") "[Done]"
+  !   write(6,*)
+
+  !   return
+  ! end subroutine load__BFieldFile
+
+  
+  ! ! ====================================================== !
+  ! ! === load EField from external File                 === !
+  ! ! ====================================================== !
+  ! subroutine load__EFieldFile
+  !   use variablesMod
+  !   implicit none
+  !   integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+  !   character(cLen)               :: cmt
+  !   double precision              :: xg(3)
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [1] Preparation                                --- !
+  !   ! ------------------------------------------------------ !
+  !   write(6,*)
+  !   write(6,"(a,a)") "[load__EFieldFile]  EFieldFile :: ", trim( EFieldFile )
+  !   write(6,"(a)",advance="no" ) "[load__EFieldFile]  loading EField.... "
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [2] point (Text) File Type case                --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(type__EFieldFile).eq."point" ) then
+  !      open (lun,file=trim(EFieldFile),status="old",form="formatted")
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !      if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !         write(6,*)
+  !         write(6,*) "[load__EFieldFile] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !         stop
+  !      endif
+  !      if ( .not.( allocated( EBf ) ) ) then
+  !         allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !      endif
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               read(lun,*) xg(1:3), EBf(1:3,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+  !      close(lun)
+  !   else
+  !      write(6,*)
+  !      write(6,*)
+  !      write(6,*) "-----------------------------------------------------------------"
+  !      write(6,*) "[load__EFieldFile] cannot find EFieldFile [ERROR]  :: ", trim(EFieldFile)
+  !      write(6,*) "-----------------------------------------------------------------"
+  !      write(6,*)
+  !      write(6,*)
+  !      stop
+  !   endif
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [3] post process                               --- !
+  !   ! ------------------------------------------------------ !
+  !   do k=1, LK
+  !      do j=1, LJ
+  !         do i=1, LI
+  !            EBf(ex_:ez_,i,j,k) = efield_factor * EBf(ex_:ez_,i,j,k)
+  !         enddo
+  !      enddo
+  !   enddo
+    
+  !   write(6,"(a)",advance="yes") "[Done]"
+  !   write(6,*)
+    
+  !   return
+  ! end subroutine load__EFieldFile
+
+
+
+  
+  ! ! ====================================================== !
+  ! ! === load standing wave eigenmode                   === !
+  ! ! ====================================================== !
+  ! subroutine load__swEigenMode
+  !   use variablesMod
+  !   implicit none
+  !   integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+  !   character(cLen)               :: cmt
+  !   double precision              :: xg(3)
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [1] Preparation                                --- !
+  !   ! ------------------------------------------------------ !
+
+  !   write(6,*)
+  !   write(6,"(a)"  ) "[load__swEigenMode]  allocate Em1 :: EigenMode buffer 1."
+  !   write(6,*)
+  !   allocate( Em1(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !   Em1(:,:,:,:) = 0.d0
+    
+  !   write(6,*)
+  !   write(6,"(a,a)") "[load__swEigenMode]  EFieldFile (e) :: ", trim( EFieldFile )
+  !   write(6,"(a,a)") "[load__swEigenMode]  BFieldFile (b) :: ", trim( BFieldFile )
+  !   write(6,*)
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [2] point (Text) File Type case ( mode1 : e )  --- !
+  !   ! ------------------------------------------------------ !
+
+  !   if ( flag__EField ) then
+    
+  !      write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading EField.... "
+
+  !      if ( trim(type__EFieldFile).eq."point" ) then
+
+  !         !  -- [2-1] mode 1                                --  !
+  !         open (lun,file=trim(EFieldFile),status="old",form="formatted")
+  !         read (lun,*) cmt
+  !         read (lun,*) cmt
+  !         read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !         if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !            write(6,*)
+  !            write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !            stop
+  !         endif
+  !         do k=1, LK
+  !            do j=1, LJ
+  !               do i=1, LI
+  !                  read(lun,*) xg(1:3), Em1(ex_:ez_,i,j,k)
+  !               enddo
+  !            enddo
+  !         enddo
+  !         close(lun)
+
+  !      else
+  !         write(6,*)
+  !         write(6,*)
+  !         write(6,*) "-----------------------------------------------------------------"
+  !         write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(EFieldFile)
+  !         write(6,*) "-----------------------------------------------------------------"
+  !         write(6,*)
+  !         write(6,*)
+  !         stop
+  !      endif
+
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               Em1(ex_:ez_,i,j,k) = efield_factor * Em1(ex_:ez_,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+
+  !      write(6,"(a)",advance="yes") "[Done]"
+  !      write(6,*)
+
+  !   endif
+       
+  !   ! ------------------------------------------------------ !
+  !   ! --- [3] point (Text) File Type case ( mode1 : b )  --- !
+  !   ! ------------------------------------------------------ !
+
+  !   if ( flag__BField ) then
+    
+  !      write(6,"(a)",advance="no" ) "[load__swEigenMode]  loading BField.... "
+
+  !      if ( trim(type__BFieldFile).eq."point" ) then
+
+  !         open (lun,file=trim(BFieldFile),status="old",form="formatted")
+  !         read (lun,*) cmt
+  !         read (lun,*) cmt
+  !         read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !         if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !            write(6,*)
+  !            write(6,*) "[load__swEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !            stop
+  !         endif
+  !         do k=1, LK
+  !            do j=1, LJ
+  !               do i=1, LI
+  !                  read(lun,*) xg(1:3), Em1(bx_:bz_,i,j,k)
+  !               enddo
+  !            enddo
+  !         enddo
+  !         close(lun)
+
+  !      else
+  !         write(6,*)
+  !         write(6,*)
+  !         write(6,*) "-----------------------------------------------------------------"
+  !         write(6,*) "[load__swEigenMode] cannot find swEigenFile [ERROR]  :: ", trim(BFieldFile)
+  !         write(6,*) "-----------------------------------------------------------------"
+  !         write(6,*)
+  !         write(6,*)
+  !         stop
+  !      endif
+
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               Em1(bx_:bz_,i,j,k) = bfield_factor * Em1(bx_:bz_,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+       
+  !      write(6,"(a)",advance="yes") "[Done]"
+  !      write(6,*)
+
+  !   endif
+    
+  !   ! ------------------------------------------------------ !
+  !   ! --- [4] set flags                                  --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( .not.( allocated( EBf ) ) ) then
+  !      allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !   endif
+    
+  !   ! ------------------------------------------------------ !
+  !   ! --- [5] set flags                                  --- !
+  !   ! ------------------------------------------------------ !
+  !   flag__EField          = .false.
+  !   flag__BField          = .false.
+  !   flag__BoundaryMessage = .false.
+        
+  !   return
+  ! end subroutine load__swEigenMode
+  
+
+  ! ! ====================================================== !
+  ! ! === load travelling wave eigenmode                 === !
+  ! ! ====================================================== !
+  ! subroutine load__twEigenMode
+  !   use variablesMod
+  !   implicit none
+  !   integer                       :: i, j, k, LIr, LJr, LKr, nCmpr
+  !   character(cLen)               :: cmt
+  !   double precision              :: xg(3)
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [1] Preparation                                --- !
+  !   ! ------------------------------------------------------ !
+  !   write(6,*)
+  !   write(6,"(a,a)") "[load__twEigenMode]  twEigenFile1 :: ", trim( twEigenFile1 )
+  !   write(6,"(a,a)") "[load__twEigenMode]  twEigenFile2 :: ", trim( twEigenFile2 )
+  !   write(6,"(a)",advance="no" ) "[load__twEigenMode]  loading EField.... "
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [2] point (Text) File Type case ( mode1 )      --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(type__EFieldFile).eq."point" ) then
+       
+  !      !  -- [2-1] mode 1                                --  !
+  !      open (lun,file=trim(twEigenFile1),status="old",form="formatted")
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !      if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !         write(6,*)
+  !         write(6,*) "[load__twEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !         stop
+  !      endif
+  !      if ( .not.( allocated( Em1 ) ) ) then
+  !         allocate( Em1(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !      endif
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               read(lun,*) xg(1:3), Em1(1:3,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+  !      close(lun)
+       
+  !      !  -- [2-2] mode 2                                --  !
+  !      open (lun,file=trim(twEigenFile2),status="old",form="formatted")
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt
+  !      read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+  !      if ( ( LI.ne.LIr ).or.( LJ.ne.LJr ).or.( LK.ne.LKr ) ) then
+  !         write(6,*)
+  !         write(6,*) "[load__twEigenMode] [ERROR] LI, LJ, LK  != LIr, LJr, LKr "
+  !         stop
+  !      endif
+  !      if ( .not.( allocated( Em2 ) ) ) then
+  !         allocate( Em2(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !      endif
+  !      do k=1, LK
+  !         do j=1, LJ
+  !            do i=1, LI
+  !               read(lun,*) xg(1:3), Em2(1:3,i,j,k)
+  !            enddo
+  !         enddo
+  !      enddo
+  !      close(lun)
+       
+  !      !  -- [2-3] EBf allocation                        --  !
+  !      if ( .not.( allocated( EBf ) ) ) then
+  !         allocate( EBf(6,-2:LI+3,-2:LJ+3,-2:LK+3) )
+  !      endif
+       
+  !   else
+  !      write(6,*)
+  !      write(6,*)
+  !      write(6,*) "-----------------------------------------------------------------"
+  !      write(6,*) "[load__twEigenMode] cannot find twEigenFile [ERROR]  :: ", trim(twEigenFile1)
+  !      write(6,*) "[load__twEigenMode] cannot find twEigenFile [ERROR]  :: ", trim(twEigenFile2)
+  !      write(6,*) "-----------------------------------------------------------------"
+  !      write(6,*)
+  !      write(6,*)
+  !      stop
+  !   endif
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [4] set flags                                  --- !
+  !   ! ------------------------------------------------------ !
+  !   flag__EField          = .false.
+  !   flag__BoundaryMessage = .false.
+    
+  !   ! ------------------------------------------------------ !
+  !   ! --- [3] post process                               --- !
+  !   ! ------------------------------------------------------ !
+  !   write(6,"(a)",advance="yes") "[Done]"
+  !   write(6,*)
+    
+  !   return
+  ! end subroutine load__twEigenMode
