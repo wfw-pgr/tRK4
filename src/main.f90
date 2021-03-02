@@ -56,9 +56,7 @@ program main
      endif
      
      ! -- [2-2] field solver                          --  !
-     if ( flag__modulateField ) then
-        call modulate__ebfields
-     endif
+     call modulate__ebfields
      
      !  -- [2-3] step forward particle info.           --  !
      call RK4__tracker

@@ -20,6 +20,10 @@ contains
           efields(iF)%modulation = sin( twopi*freq*ptime + phase_delay/360.0*twopi )
        else if ( trim(efields(iF)%modulation_type).eq."off" ) then
           efields(iF)%modulation = 1.d0
+       else
+          write(6,*) "[modulate__ebfields] modulation_type ??? >> into off "
+          write(6,*) "                     ", trim( efields(iF)%modulation_type )
+          efields(iF)%modulation = 1.d0
        endif
     enddo
     ! ------------------------------------------------------ !
@@ -31,6 +35,10 @@ contains
        else if ( trim(bfields(iF)%modulation_type).eq."sin" ) then
           bfields(iF)%modulation = sin( twopi*freq*ptime + phase_delay/360.0*twopi )
        else if ( trim(bfields(iF)%modulation_type).eq."off" ) then
+          bfields(iF)%modulation = 1.d0
+       else
+          write(6,*) "[modulate__ebfields] modulation_type ??? >> into off "
+          write(6,*) "                     ", trim( bfields(iF)%modulation_type )
           bfields(iF)%modulation = 1.d0
        endif
     enddo

@@ -22,9 +22,9 @@ def generate__particleSample():
     #  -- [1-2] systematic components (xp)          --  #
     npt         = const["npt"]
     Data        = np.zeros( (const["npt"],6) )
-    xD          = ( const["xMax"] - const["xMin"] ) / 3  # -- for 3 sigma = xD -- #
-    yD          = ( const["yMax"] - const["yMin"] ) / 3
-    zD          = ( const["zMax"] - const["zMin"] ) / 3
+    xD          = ( const["xMax"] - const["xMin"] )
+    yD          = ( const["yMax"] - const["yMin"] )
+    zD          = ( const["zMax"] - const["zMin"] )
     xM          = ( const["xMax"] + const["xMin"] ) * 0.5
     yM          = ( const["yMax"] + const["yMin"] ) * 0.5
     zM          = ( const["zMax"] + const["zMin"] ) * 0.5
@@ -39,7 +39,7 @@ def generate__particleSample():
     elif ( const["distribution_x"] == "uniform"   ):
         Data[:,xp_] = const["xMin"] + xD * np.random.rand( npt )
     elif ( const["distribution_x"] == "gaussian"  ):
-        Data[:,xp_] = np.random.normal( loc=xM, scale=xD, size=npt )
+        Data[:,xp_] = np.random.normal( loc=xM, scale=xD/3, size=npt ) # -- xD/3 :: 3 sigma -- #
         
     #  -- [2-2] distribution for y                  --  #
     if   ( const["distribution_y"] == "equispace" ):
@@ -47,7 +47,7 @@ def generate__particleSample():
     elif ( const["distribution_y"] == "uniform"   ):
         Data[:,yp_] = const["yMin"] + yD * np.random.rand( npt )
     elif ( const["distribution_y"] == "gaussian"  ):
-        Data[:,yp_] = np.random.normal( loc=yM, scale=yD, size=npt )
+        Data[:,yp_] = np.random.normal( loc=yM, scale=yD/3, size=npt )  # -- yD/3 :: 3 sigma -- #
 
     #  -- [2-3] distribution for z                  --  #
     if   ( const["distribution_z"] == "equispace" ):
@@ -55,7 +55,7 @@ def generate__particleSample():
     elif ( const["distribution_z"] == "uniform"   ):
         Data[:,zp_] = const["zMin"] + zD * np.random.rand( npt )
     elif ( const["distribution_z"] == "gaussian"  ):
-        Data[:,zp_] = np.random.normal( loc=zM, scale=zD, size=npt )
+        Data[:,zp_] = np.random.normal( loc=zM, scale=zD/3, size=npt )  # -- zD/3 :: 3 sigma -- #
 
 
     # ------------------------------------------------- #

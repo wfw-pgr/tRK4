@@ -7,7 +7,8 @@ module variablesMod
      character(3)                  :: modulation_type
      double precision              :: dx, dy, dz, dxInv, dyInv, dzInv
      double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
-     double precision              :: modulation
+     double precision              :: xshift, yshift, zshift
+     double precision              :: modulation, amplitude_factor
      double precision, allocatable :: EBf(:,:,:,:)
   end type field
 
@@ -42,7 +43,8 @@ module variablesMod
   character(cLen)               :: particleFile
   character(cLen)               :: trackFileBase, probeFileBase
   character(cLen)               :: EFieldListFile, BFieldListFile
-
+  character(cLen)               :: EFieldParamFile, BFieldParamFile
+  
   logical                       :: flag__EField
   logical                       :: flag__BField
   logical                       :: flag__axisymmetry
@@ -53,7 +55,6 @@ module variablesMod
   logical                       :: flag__probeField
   logical                       :: flag__popoutBoundary
   logical                       :: flag__beamposmonitor
-  logical                       :: flag__modulateField
 
   character(cLen)               :: FieldBoundary__x, FieldBoundary__y, FieldBoundary__z
   character(cLen)               :: particleBoundary__x, particleBoundary__y, particleBoundary__z

@@ -12,7 +12,9 @@ def into__namelist( inpFile="dat/parameter.conf", outFile="dat/input.lst" ):
     # ------------------------------------------------- #
     const    = lcn.load__constants( inpFile=inpFile )
     keys     = lcn.load__constants( inpFile=inpFile, returnKeys=True )
-    skipkeys = [ "tw_tStart", "tw_tEnd", "tw_tDiv", "mp", "qe", "cv" ]
+    skipkeys = [ "tw_tStart", "tw_tEnd", "tw_tDiv", "mp", "qe", "cv", \
+                 "P_input", "Lcavity", "beta_wave", "Ustored", "Qvalue", "rsh", "t_transit_time",\
+    ]
     print( keys )
 
     # ------------------------------------------------- #

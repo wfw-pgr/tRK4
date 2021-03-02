@@ -24,7 +24,7 @@ def time_vs_energy( nums=None ):
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
     if ( nums is None ):
-        print( "[time_vs_energy] please input particle number : ( e.g. :: 1 2 3 ) >>> ", end="" )
+        print( "[time_vs_energy] please input particle number : ( def. :: all ) >>> ", end="" )
         nums = input()
         if ( len( nums ) == 0 ):
             import glob

@@ -107,13 +107,14 @@ contains
     double precision, intent(in)  :: xp(3)
     double precision, intent(out) :: EBp(6)
     integer                       :: i, j, k, ip, jp, kp, iF
-    double precision              :: rposit(3), sfx(-2:2), sfy(-2:2), sfz(-2:2)
+    double precision              :: amplitude, rposit(3), sfx(-2:2), sfy(-2:2), sfz(-2:2)
 
 
     ! ------------------------------------------------------ !
     ! --- [1] initialize EBp return variable             --- !
     ! ------------------------------------------------------ !
-    EBp(1:6) = 0.d0
+    EBp(1:6)  = 0.d0
+    amplitude = 0.d0
 
     ! ------------------------------------------------------ !
     ! --- [2] EField interpolation                       --- !
@@ -136,10 +137,11 @@ contains
           ip           = ip + 1
           jp           = jp + 1
           kp           = kp + 1
+          amplitude    = efields(iF)%modulation * efields(iF)%amplitude_factor
           do k=-2, 2
              do j=-2, 2
                 do i=-2, 2
-                   EBp(ex_:ez_) = EBp(ex_:ez_) + sfx(i)*sfy(j)*sfz(k) * efields(iF)%modulation &
+                   EBp(ex_:ez_) = EBp(ex_:ez_) + sfx(i)*sfy(j)*sfz(k) * amplitude &
                         &                      * efields(iF)%EBf(fx_:fz_,ip+i,jp+j,kp+k)
                 enddo
              enddo
@@ -169,14 +171,11 @@ contains
           ip           = ip + 1
           jp           = jp + 1
           kp           = kp + 1
-          ! write(6,*) ip, jp, kp
-          ! write(6,*) rposit(:), xp(:)
-          ! write(6,*) EBp(:)
-          ! write(6,*)
+          amplitude    = bfields(iF)%modulation * bfields(iF)%amplitude_factor
           do k=-2, 2
              do j=-2, 2
                 do i=-2, 2
-                   EBp(bx_:bz_) = EBp(bx_:bz_) + sfx(i)*sfy(j)*sfz(k) * bfields(iF)%modulation &
+                   EBp(bx_:bz_) = EBp(bx_:bz_) + sfx(i)*sfy(j)*sfz(k) * amplitude &
                         &                      * bfields(iF)%EBf(fx_:fz_,ip+i,jp+j,kp+k)
                 enddo
              enddo

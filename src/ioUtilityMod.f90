@@ -13,10 +13,11 @@ contains
     namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
          &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
          &                popoutFile, bpmFile, EFieldListFile, BFieldListFile,              &
+         &                EFieldparamFile, BFieldParamFile,                                 &
          &                flag__EField, flag__BField, flag__axisymmetry,                    &
          &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
          &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
-         &                flag__beamposmonitor, flag__modulateField,                        &
+         &                flag__beamposmonitor,                                             &
          &                efield_factor, bfield_factor,                                     &
          &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
@@ -161,119 +162,9 @@ contains
     ! ------------------------------------------------------ !
     ! --- [3] fetch EField Data                          --- !
     ! ------------------------------------------------------ !
-
     do iF=1, nEField
-       
-       !  -- [3-1] EField Data File Name                 --  !
-       write(6,"(a,a)") "[load__EFieldFile]  EFieldFile :: ", trim( eFieldFiles(iF) )
-       write(6,"(a)",advance="no" ) "[load__EFieldFile]  loading EField.... "
-       
-       !  -- [3-2] fetch EField Data                     --  !
-       open (lun,file=trim(eFieldFiles(iF)),status="old",form="formatted")
-       
-       !  -- [3-3] get Field shape information           --  !
-       read (lun,*) cmt
-       read (lun,*) cmt
-       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       efields(iF)%LI = LIr
-       efields(iF)%LJ = LJr
-       efields(iF)%LK = LKr
-       
-       !  -- [3-4] fetch field information               --  !
-       allocate( efields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
-       efields(iF)%EBf(:,:,:,:) = 0.d0
-       do k=1, LKr
-          do j=1, LJr
-             do i=1, LIr
-                read(lun,*) efields(iF)%EBf(1:6,i,j,k)
-             enddo
-          enddo
-       enddo
-
-       close(lun)
-
-       !  -- [3-5] get bounding coordinate of the field  --  !
-       xMin_ = efields(iF)%EBf(xp_,1,1,1)
-       xMax_ = efields(iF)%EBf(xp_,1,1,1)
-       yMin_ = efields(iF)%EBf(yp_,1,1,1)
-       yMax_ = efields(iF)%EBf(yp_,1,1,1)
-       zMin_ = efields(iF)%EBf(zp_,1,1,1)
-       zMax_ = efields(iF)%EBf(zp_,1,1,1)
-       do i=1, LIr
-          xMin_ = min( xMin_, efields(iF)%EBf(xp_,i,1,1) )
-          xMax_ = max( xMax_, efields(iF)%EBf(xp_,i,1,1) )
-       enddo
-       do j=1, LJr
-          yMin_ = min( yMin_, efields(iF)%EBf(yp_,1,j,1) )
-          yMax_ = max( yMax_, efields(iF)%EBf(yp_,1,j,1) )
-       enddo
-       do k=1, LKr
-          zMin_ = min( zMin_, efields(iF)%EBf(zp_,1,1,k) )
-          zMax_ = max( zMax_, efields(iF)%EBf(zp_,1,1,k) )
-       enddo
-       efields(iF)%xMin = xMin_
-       efields(iF)%xMax = xMax_
-       efields(iF)%yMin = yMin_
-       efields(iF)%yMax = yMax_
-       efields(iF)%zMin = zMin_
-       efields(iF)%zMax = zMax_
-       if ( flag__axisymmetry ) then
-          efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
-          efields(iF)%dy    =   0.d0
-          efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
-          efields(iF)%dxInv = 1.d0 / efields(iF)%dx
-          efields(iF)%dyInv =   0.d0
-          efields(iF)%dzInv = 1.d0 / efields(iF)%dz
-       else
-          efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
-          efields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
-          efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
-          efields(iF)%dxInv = 1.d0 / efields(iF)%dx
-          efields(iF)%dyInv = 1.d0 / efields(iF)%dy
-          efields(iF)%dzInv = 1.d0 / efields(iF)%dz
-       endif
-       xMin = min( xMin_, xMin )
-       xMax = max( xMax_, xMax )
-       yMin = min( yMin_, yMin )
-       yMax = max( yMax_, yMax )
-       zMin = min( zMin_, zMin )
-       zMax = max( zMax_, zMax )
-       
-       !  -- [3-6] amplitude modification                --  !
-       do k=1, LKr
-          do j=1, LJr
-             do i=1, LIr
-                efields(iF)%EBf(fx_:fz_,i,j,k) = efield_factor * efields(iF)%EBf(fx_:fz_,i,j,k)
-             enddo
-          enddo
-       enddo
-       write(6,"(a)",advance="yes") "[Done]"
-       !  -- [3-7] time modulation                       --  !
-       efields(iF)%modulation = 1.d0
-       
-       !  -- [3-8] boundary                        --  !
-       efields(iF)%boundary_x = "Neumann"
-       efields(iF)%boundary_y = "Neumann"
-       efields(iF)%boundary_z = "Neumann"
-
-       write(6,"(a)")       " ---------------- EField -------------------- "
-       write(6,"(a,i8)"   ) "         LI :: ", efields(iF)%LI
-       write(6,"(a,i8)"   ) "         LJ :: ", efields(iF)%LJ
-       write(6,"(a,i8)"   ) "         LK :: ", efields(iF)%LK
-       write(6,"(a,f15.8)") "       xMin :: ", efields(iF)%xMin
-       write(6,"(a,f15.8)") "       xMax :: ", efields(iF)%xMax
-       write(6,"(a,f15.8)") "       yMin :: ", efields(iF)%yMin
-       write(6,"(a,f15.8)") "       yMax :: ", efields(iF)%yMax
-       write(6,"(a,f15.8)") "       zMin :: ", efields(iF)%zMin
-       write(6,"(a,f15.8)") "       zMax :: ", efields(iF)%zMax
-       write(6,"(a,f15.8)") "         dx :: ", efields(iF)%dx
-       write(6,"(a,f15.8)") "         dy :: ", efields(iF)%dy
-       write(6,"(a,f15.8)") "         dz :: ", efields(iF)%dz
-       write(6,"(a,f15.8)") "      dxInv :: ", efields(iF)%dxInv
-       write(6,"(a,f15.8)") "      dyInv :: ", efields(iF)%dyInv
-       write(6,"(a,f15.8)") "      dzInv :: ", efields(iF)%dzInv
-       write(6,"(a)")       " -------------------------------------------- "
-       
+       write(6,*) yMin, yMax
+       call load__singleFieldFile( eFieldFiles(iF), efields(iF) )
     enddo
     write(6,*)
     write(6,*)
@@ -281,130 +172,142 @@ contains
     ! ------------------------------------------------------ !
     ! --- [4] fetch BField Data                          --- !
     ! ------------------------------------------------------ !
-    
     do iF=1, nBField
-       
-       !  -- [4-1] BField Data File Name                 --  !
-       write(6,"(a,a)") "[load__BFieldFile]  BfieldFile :: ", trim( bfieldFiles(iF) )
-       write(6,"(a)",advance="no" ) "[load__BfieldFile]  loading Bfield.... "
-       
-       !  -- [4-2] fetch Bfield Data                     --  !
-       open (lun,file=trim(bfieldFiles(iF)),status="old",form="formatted")
-       
-       !  -- [4-3] get Field shape information           --  !
-       read (lun,*) cmt
-       read (lun,*) cmt
-       read (lun,*) cmt, LKr, LJr, LIr, nCmpr
-       bfields(iF)%LI = LIr
-       bfields(iF)%LJ = LJr
-       bfields(iF)%LK = LKr
-       
-       !  -- [4-4] fetch field information               --  !
-       allocate( bfields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
-       bfields(iF)%EBf(:,:,:,:) = 0.d0
-       do k=1, LKr
-          do j=1, LJr
-             do i=1, LIr
-                read(lun,*) bfields(iF)%EBf(1:6,i,j,k)
-             enddo
-          enddo
-       enddo
-
-       close(lun)
-
-       !  -- [4-5] get bounding coordinate of the field  --  !
-       xMin_ = bfields(iF)%EBf(xp_,1,1,1)
-       xMax_ = bfields(iF)%EBf(xp_,1,1,1)
-       yMin_ = bfields(iF)%EBf(yp_,1,1,1)
-       yMax_ = bfields(iF)%EBf(yp_,1,1,1)
-       zMin_ = bfields(iF)%EBf(zp_,1,1,1)
-       zMax_ = bfields(iF)%EBf(zp_,1,1,1)
-       do i=1, LIr
-          xMin_ = min( xMin_, bfields(iF)%EBf(xp_,i,1,1) )
-          xMax_ = max( xMax_, bfields(iF)%EBf(xp_,i,1,1) )
-       enddo
-       do j=1, LJr
-          yMin_ = min( yMin_, bfields(iF)%EBf(yp_,1,j,1) )
-          yMax_ = max( yMax_, bfields(iF)%EBf(yp_,1,j,1) )
-       enddo
-       do k=1, LKr
-          zMin_ = min( zMin_, bfields(iF)%EBf(zp_,1,1,k) )
-          zMax_ = max( zMax_, bfields(iF)%EBf(zp_,1,1,k) )
-       enddo
-       bfields(iF)%xMin = xMin_
-       bfields(iF)%xMax = xMax_
-       bfields(iF)%yMin = yMin_
-       bfields(iF)%yMax = yMax_
-       bfields(iF)%zMin = zMin_
-       bfields(iF)%zMax = zMax_
-       if ( flag__axisymmetry ) then
-          bfields(iF)%dx   = ( xMax_ - xMin_ ) / dble( LIr-1 )
-          bfields(iF)%dy   =   0.d0
-          bfields(iF)%dz   = ( zMax_ - zMin_ ) / dble( LKr-1 )
-          bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
-          bfields(iF)%dyInv = 0.d0
-          bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz          
-       else
-          bfields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
-          bfields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
-          bfields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
-          bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
-          bfields(iF)%dyInv = 1.d0 / bfields(iF)%dy
-          bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz
-
-       endif
-
-       xMin = min( xMin_, xMin )
-       xMax = max( xMax_, xMax )
-       yMin = min( yMin_, yMin )
-       yMax = max( yMax_, yMax )
-       zMin = min( zMin_, zMin )
-       zMax = max( zMax_, zMax )
-       
-       !  -- [4-6] amplitude modification                --  !
-       do k=1, LKr
-          do j=1, LJr
-             do i=1, LIr
-                bfields(iF)%EBf(fx_:fz_,i,j,k) = bfield_factor * bfields(iF)%EBf(fx_:fz_,i,j,k)
-             enddo
-          enddo
-       enddo
-       !  -- [4-7] time modulation                       --  !
-       bfields(iF)%modulation = 1.d0
-       
-       write(6,"(a)",advance="yes") "[Done]"
-
-       !  -- [temporary] -- !
-       bfields(iF)%boundary_x = "Neumann"
-       bfields(iF)%boundary_y = "Neumann"
-       bfields(iF)%boundary_z = "Neumann"
-
-       write(6,"(a)")       " ---------------- BField -------------------- "
-       write(6,"(a,i8)"   ) "         LI :: ", bfields(iF)%LI
-       write(6,"(a,i8)"   ) "         LJ :: ", bfields(iF)%LJ
-       write(6,"(a,i8)"   ) "         LK :: ", bfields(iF)%LK
-       write(6,"(a,f15.8)") "       xMin :: ", bfields(iF)%xMin
-       write(6,"(a,f15.8)") "       xMax :: ", bfields(iF)%xMax
-       write(6,"(a,f15.8)") "       yMin :: ", bfields(iF)%yMin
-       write(6,"(a,f15.8)") "       yMax :: ", bfields(iF)%yMax
-       write(6,"(a,f15.8)") "       zMin :: ", bfields(iF)%zMin
-       write(6,"(a,f15.8)") "       zMax :: ", bfields(iF)%zMax
-       write(6,"(a,f15.8)") "         dx :: ", bfields(iF)%dx
-       write(6,"(a,f15.8)") "         dy :: ", bfields(iF)%dy
-       write(6,"(a,f15.8)") "         dz :: ", bfields(iF)%dz
-       write(6,"(a,f15.8)") "      dxInv :: ", bfields(iF)%dxInv
-       write(6,"(a,f15.8)") "      dyInv :: ", bfields(iF)%dyInv
-       write(6,"(a,f15.8)") "      dzInv :: ", bfields(iF)%dzInv
-       write(6,"(a)")       " -------------------------------------------- "
-       
-
-       
+       call load__singleFieldFile( bFieldFiles(iF), bfields(iF) )
     enddo
-    
+    write(6,*)
+    write(6,*)
+
     return
   end subroutine load__ebFieldFile
 
 
+  ! ====================================================== !
+  ! === load field info                                === !
+  ! ====================================================== !
+  subroutine load__singleFieldFile( FieldFile, afield )
+    use variablesMod
+    implicit none
+    character(cLen), intent(in)    :: FieldFile
+    type(field)    , intent(inout) :: afield
+    character(cLen)  :: cmt, key
+    integer          :: i, j, k, LIr, LJr, LKr, nCmpr
+    double precision :: xMin_, xMax_, yMin_, yMax_, zMin_, zMax_
+
+    !  -- [3-1] EField Data File Name                 --  !
+    write(6,"(a,a)") "[load__singleFieldFile]  FieldFile :: ", trim( FieldFile )
+    write(6,"(a)",advance="no" ) "[load__singleFieldFile]  loading Field.... "
+
+    !  -- [3-2] fetch EField Data                     --  !
+    open (lun,file=trim(FieldFile),status="old",form="formatted")
+    
+    !  -- [3-3] get Field shape information           --  !
+    read (lun,*) cmt
+    read (lun,*) cmt
+    read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+    afield%LI = LIr
+    afield%LJ = LJr
+    afield%LK = LKr
+    
+    !  -- [3-4] fetch field information               --  !
+    allocate( afield%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
+    afield%EBf(:,:,:,:) = 0.d0
+    do k=1, LKr
+       do j=1, LJr
+          do i=1, LIr
+             read(lun,*) afield%EBf(1:6,i,j,k)
+          enddo
+       enddo
+    enddo
+    
+    close(lun)
+    write(6,"(a)",advance="yes") "[Done]"
+
+    !  -- [3-5] field parameters                      --  !
+    open (lun,file=trim(EFieldParamFile),status="old")
+    read (lun,*) cmt
+    read (lun,*) key, afield%amplitude_factor, afield%xshift, afield%yshift, &
+         & afield%zshift, afield%modulation_type, afield%boundary_x, &
+         & afield%boundary_y, afield%boundary_z
+    close(lun)
+    
+    afield%modulation = 1.d0
+
+    !  -- [3-6] get bounding coordinate of the field  --  !
+    xMin_ = afield%EBf(xp_,1,1,1)
+    xMax_ = afield%EBf(xp_,1,1,1)
+    yMin_ = afield%EBf(yp_,1,1,1)
+    yMax_ = afield%EBf(yp_,1,1,1)
+    zMin_ = afield%EBf(zp_,1,1,1)
+    zMax_ = afield%EBf(zp_,1,1,1)
+    do i=1, LIr
+       xMin_ = min( xMin_, afield%EBf(xp_,i,1,1) )
+       xMax_ = max( xMax_, afield%EBf(xp_,i,1,1) )
+    enddo
+    do j=1, LJr
+       yMin_ = min( yMin_, afield%EBf(yp_,1,j,1) )
+       yMax_ = max( yMax_, afield%EBf(yp_,1,j,1) )
+    enddo
+    do k=1, LKr
+       zMin_ = min( zMin_, afield%EBf(zp_,1,1,k) )
+       zMax_ = max( zMax_, afield%EBf(zp_,1,1,k) )
+    enddo
+    afield%xMin = xMin_ + afield%xshift
+    afield%xMax = xMax_ + afield%xshift
+    afield%yMin = yMin_ + afield%yshift
+    afield%yMax = yMax_ + afield%yshift
+    afield%zMin = zMin_ + afield%zshift
+    afield%zMax = zMax_ + afield%zshift
+
+    if ( flag__axisymmetry ) then
+       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       afield%dy    =   0.d0
+       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       afield%dxInv = 1.d0 / afield%dx
+       afield%dyInv = 0.d0
+       afield%dzInv = 1.d0 / afield%dz
+    else
+       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       afield%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       afield%dxInv = 1.d0 / afield%dx
+       afield%dyInv = 1.d0 / afield%dy
+       afield%dzInv = 1.d0 / afield%dz
+    endif
+    xMin = min( xMin_, xMin )
+    xMax = max( xMax_, xMax )
+    yMin = min( yMin_, yMin )
+    yMax = max( yMax_, yMax )
+    zMin = min( zMin_, zMin )
+    zMax = max( zMax_, zMax )
+
+    write(6,"(a)")       " ----------------  Field  -------------------- "
+    write(6,"(a,i8)"   ) "         LI :: ", afield%LI
+    write(6,"(a,i8)"   ) "         LJ :: ", afield%LJ
+    write(6,"(a,i8)"   ) "         LK :: ", afield%LK
+    write(6,"(a,f15.8)") "       xMin :: ", afield%xMin
+    write(6,"(a,f15.8)") "       xMax :: ", afield%xMax
+    write(6,"(a,f15.8)") "       yMin :: ", afield%yMin
+    write(6,"(a,f15.8)") "       yMax :: ", afield%yMax
+    write(6,"(a,f15.8)") "       zMin :: ", afield%zMin
+    write(6,"(a,f15.8)") "       zMax :: ", afield%zMax
+    write(6,"(a,f15.8)") "         dx :: ", afield%dx
+    write(6,"(a,f15.8)") "         dy :: ", afield%dy
+    write(6,"(a,f15.8)") "         dz :: ", afield%dz
+    write(6,"(a,f15.8)") "      dxInv :: ", afield%dxInv
+    write(6,"(a,f15.8)") "      dyInv :: ", afield%dyInv
+    write(6,"(a,f15.8)") "      dzInv :: ", afield%dzInv
+    write(6,"(a,a)"    ) "  modu_type :: ", afield%modulation_type
+    write(6,"(a,a)"    ) " boundary_x :: ", afield%boundary_x
+    write(6,"(a,a)"    ) " boundary_y :: ", afield%boundary_y
+    write(6,"(a,a)"    ) " boundary_z :: ", afield%boundary_z
+    write(6,"(a,f15.8)") "  amplitude :: ", afield%amplitude_factor
+    write(6,"(a)")       " --------------------------------------------- "
+
+    return
+  end subroutine load__singleFieldFile
+  
+  
   ! ====================================================== !
   ! === save__particles in a file                      === !
   ! ====================================================== !
@@ -522,8 +425,6 @@ contains
   
 
 end module ioUtilityMod
-
-
 
 
     ! read(lun,char_fmt) cmt, cmt, particleFile
@@ -970,3 +871,266 @@ end module ioUtilityMod
     
   !   return
   ! end subroutine load__twEigenMode
+
+
+    ! !  -- [3-6] amplitude modification                --  !
+    ! do k=1, LKr
+    !    do j=1, LJr
+    !       do i=1, LIr
+    !          field%EBf(fx_:fz_,i,j,k) = efield_factor * field%EBf(fx_:fz_,i,j,k)
+    !       enddo
+    !    enddo
+    ! enddo
+
+
+
+
+       ! !  -- [4-1] BField Data File Name                 --  !
+       ! write(6,"(a,a)") "[load__BFieldFile]  BfieldFile :: ", trim( bfieldFiles(iF) )
+       ! write(6,"(a)",advance="no" ) "[load__BfieldFile]  loading Bfield.... "
+       
+       ! !  -- [4-2] fetch Bfield Data                     --  !
+       ! open (lun,file=trim(bfieldFiles(iF)),status="old",form="formatted")
+       
+       ! !  -- [4-3] get Field shape information           --  !
+       ! read (lun,*) cmt
+       ! read (lun,*) cmt
+       ! read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+       ! bfields(iF)%LI = LIr
+       ! bfields(iF)%LJ = LJr
+       ! bfields(iF)%LK = LKr
+       
+       ! !  -- [4-4] fetch field information               --  !
+       ! allocate( bfields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
+       ! bfields(iF)%EBf(:,:,:,:) = 0.d0
+       ! do k=1, LKr
+       !    do j=1, LJr
+       !       do i=1, LIr
+       !          read(lun,*) bfields(iF)%EBf(1:6,i,j,k)
+       !       enddo
+       !    enddo
+       ! enddo
+
+       ! close(lun)
+       ! write(6,"(a)",advance="yes") "[Done]"
+
+       ! !  -- [4-7] field parameters                      --  !
+       ! open (lun,file=trim(BfieldParamFile),status="old")
+       ! read (lun,*) cmt
+       ! read (lun,*) key, bfields(iF)%amplitude_factor, bfields(iF)%xshift, bfields(iF)%xshift, &
+       !      & bfields(iF)%xshift, bfields(iF)%modulation_type, bfields(iF)%boundary_x, &
+       !      & bfields(iF)%boundary_y, bfields(iF)%boundary_z
+       ! close(lun)
+
+       ! bfields(iF)%modulation = 1.d0
+
+       ! !  -- [4-5] get bounding coordinate of the field  --  !
+       ! xMin_ = bfields(iF)%EBf(xp_,1,1,1)
+       ! xMax_ = bfields(iF)%EBf(xp_,1,1,1)
+       ! yMin_ = bfields(iF)%EBf(yp_,1,1,1)
+       ! yMax_ = bfields(iF)%EBf(yp_,1,1,1)
+       ! zMin_ = bfields(iF)%EBf(zp_,1,1,1)
+       ! zMax_ = bfields(iF)%EBf(zp_,1,1,1)
+       ! do i=1, LIr
+       !    xMin_ = min( xMin_, bfields(iF)%EBf(xp_,i,1,1) )
+       !    xMax_ = max( xMax_, bfields(iF)%EBf(xp_,i,1,1) )
+       ! enddo
+       ! do j=1, LJr
+       !    yMin_ = min( yMin_, bfields(iF)%EBf(yp_,1,j,1) )
+       !    yMax_ = max( yMax_, bfields(iF)%EBf(yp_,1,j,1) )
+       ! enddo
+       ! do k=1, LKr
+       !    zMin_ = min( zMin_, bfields(iF)%EBf(zp_,1,1,k) )
+       !    zMax_ = max( zMax_, bfields(iF)%EBf(zp_,1,1,k) )
+       ! enddo
+       ! bfields(iF)%xMin = xMin_
+       ! bfields(iF)%xMax = xMax_
+       ! bfields(iF)%yMin = yMin_
+       ! bfields(iF)%yMax = yMax_
+       ! bfields(iF)%zMin = zMin_
+       ! bfields(iF)%zMax = zMax_
+       ! if ( flag__axisymmetry ) then
+       !    bfields(iF)%dx   = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       !    bfields(iF)%dy   =   0.d0
+       !    bfields(iF)%dz   = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       !    bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
+       !    bfields(iF)%dyInv = 0.d0
+       !    bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz          
+       ! else
+       !    bfields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       !    bfields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+       !    bfields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       !    bfields(iF)%dxInv = 1.d0 / bfields(iF)%dx
+       !    bfields(iF)%dyInv = 1.d0 / bfields(iF)%dy
+       !    bfields(iF)%dzInv = 1.d0 / bfields(iF)%dz
+
+       ! endif
+
+       ! xMin = min( xMin_, xMin )
+       ! xMax = max( xMax_, xMax )
+       ! yMin = min( yMin_, yMin )
+       ! yMax = max( yMax_, yMax )
+       ! zMin = min( zMin_, zMin )
+       ! zMax = max( zMax_, zMax )
+       
+       ! !  -- [4-6] amplitude modification                --  !
+       ! do k=1, LKr
+       !    do j=1, LJr
+       !       do i=1, LIr
+       !          bfields(iF)%EBf(fx_:fz_,i,j,k) = bfield_factor * bfields(iF)%EBf(fx_:fz_,i,j,k)
+       !       enddo
+       !    enddo
+       ! enddo
+       ! !  -- [4-7] time modulation                       --  !
+       ! bfields(iF)%modulation = 1.d0
+       
+
+       ! !  -- [temporary] -- !
+       ! bfields(iF)%boundary_x = "Neumann"
+       ! bfields(iF)%boundary_y = "Neumann"
+       ! bfields(iF)%boundary_z = "Neumann"
+
+       ! write(6,"(a)")       " ---------------- BField -------------------- "
+       ! write(6,"(a,i8)"   ) "         LI :: ", bfields(iF)%LI
+       ! write(6,"(a,i8)"   ) "         LJ :: ", bfields(iF)%LJ
+       ! write(6,"(a,i8)"   ) "         LK :: ", bfields(iF)%LK
+       ! write(6,"(a,f15.8)") "       xMin :: ", bfields(iF)%xMin
+       ! write(6,"(a,f15.8)") "       xMax :: ", bfields(iF)%xMax
+       ! write(6,"(a,f15.8)") "       yMin :: ", bfields(iF)%yMin
+       ! write(6,"(a,f15.8)") "       yMax :: ", bfields(iF)%yMax
+       ! write(6,"(a,f15.8)") "       zMin :: ", bfields(iF)%zMin
+       ! write(6,"(a,f15.8)") "       zMax :: ", bfields(iF)%zMax
+       ! write(6,"(a,f15.8)") "         dx :: ", bfields(iF)%dx
+       ! write(6,"(a,f15.8)") "         dy :: ", bfields(iF)%dy
+       ! write(6,"(a,f15.8)") "         dz :: ", bfields(iF)%dz
+       ! write(6,"(a,f15.8)") "      dxInv :: ", bfields(iF)%dxInv
+       ! write(6,"(a,f15.8)") "      dyInv :: ", bfields(iF)%dyInv
+       ! write(6,"(a,f15.8)") "      dzInv :: ", bfields(iF)%dzInv
+       ! write(6,"(a)")       " -------------------------------------------- "
+
+
+       ! !  -- [3-1] EField Data File Name                 --  !
+       ! write(6,"(a,a)") "[load__EFieldFile]  EFieldFile :: ", trim( eFieldFiles(iF) )
+       ! write(6,"(a)",advance="no" ) "[load__EFieldFile]  loading EField.... "
+       
+       ! !  -- [3-2] fetch EField Data                     --  !
+       ! open (lun,file=trim(eFieldFiles(iF)),status="old",form="formatted")
+       
+       ! !  -- [3-3] get Field shape information           --  !
+       ! read (lun,*) cmt
+       ! read (lun,*) cmt
+       ! read (lun,*) cmt, LKr, LJr, LIr, nCmpr
+       ! efields(iF)%LI = LIr
+       ! efields(iF)%LJ = LJr
+       ! efields(iF)%LK = LKr
+       
+       ! !  -- [3-4] fetch field information               --  !
+       ! allocate( efields(iF)%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
+       ! efields(iF)%EBf(:,:,:,:) = 0.d0
+       ! do k=1, LKr
+       !    do j=1, LJr
+       !       do i=1, LIr
+       !          read(lun,*) efields(iF)%EBf(1:6,i,j,k)
+       !       enddo
+       !    enddo
+       ! enddo
+
+       ! close(lun)
+
+       ! !  -- [3-5] field parameters                      --  !
+       ! open (lun,file=trim(EFieldParamFile),status="old")
+       ! read (lun,*) cmt
+       ! read (lun,*) key, efields(iF)%amplitude_factor, efields(iF)%xshift, efields(iF)%xshift, &
+       !      & efields(iF)%xshift, efields(iF)%modulation_type, efields(iF)%boundary_x, &
+       !      & efields(iF)%boundary_y, efields(iF)%boundary_z
+       ! close(lun)
+
+       ! efields(iF)%modulation = 1.d0
+
+       ! !  -- [3-6] get bounding coordinate of the field  --  !
+       ! xMin_ = efields(iF)%EBf(xp_,1,1,1)
+       ! xMax_ = efields(iF)%EBf(xp_,1,1,1)
+       ! yMin_ = efields(iF)%EBf(yp_,1,1,1)
+       ! yMax_ = efields(iF)%EBf(yp_,1,1,1)
+       ! zMin_ = efields(iF)%EBf(zp_,1,1,1)
+       ! zMax_ = efields(iF)%EBf(zp_,1,1,1)
+       ! do i=1, LIr
+       !    xMin_ = min( xMin_, efields(iF)%EBf(xp_,i,1,1) )
+       !    xMax_ = max( xMax_, efields(iF)%EBf(xp_,i,1,1) )
+       ! enddo
+       ! do j=1, LJr
+       !    yMin_ = min( yMin_, efields(iF)%EBf(yp_,1,j,1) )
+       !    yMax_ = max( yMax_, efields(iF)%EBf(yp_,1,j,1) )
+       ! enddo
+       ! do k=1, LKr
+       !    zMin_ = min( zMin_, efields(iF)%EBf(zp_,1,1,k) )
+       !    zMax_ = max( zMax_, efields(iF)%EBf(zp_,1,1,k) )
+       ! enddo
+       ! efields(iF)%xMin = xMin_ + efields(iF)%xshift
+       ! efields(iF)%xMax = xMax_ + efields(iF)%xshift
+       ! efields(iF)%yMin = yMin_ + efields(iF)%yshift
+       ! efields(iF)%yMax = yMax_ + efields(iF)%yshift
+       ! efields(iF)%zMin = zMin_ + efields(iF)%zshift
+       ! efields(iF)%zMax = zMax_ + efields(iF)%zshift
+       
+       ! if ( flag__axisymmetry ) then
+       !    efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       !    efields(iF)%dy    =   0.d0
+       !    efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       !    efields(iF)%dxInv = 1.d0 / efields(iF)%dx
+       !    efields(iF)%dyInv =   0.d0
+       !    efields(iF)%dzInv = 1.d0 / efields(iF)%dz
+       ! else
+       !    efields(iF)%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       !    efields(iF)%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+       !    efields(iF)%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       !    efields(iF)%dxInv = 1.d0 / efields(iF)%dx
+       !    efields(iF)%dyInv = 1.d0 / efields(iF)%dy
+       !    efields(iF)%dzInv = 1.d0 / efields(iF)%dz
+       ! endif
+       ! xMin = min( xMin_, xMin )
+       ! xMax = max( xMax_, xMax )
+       ! yMin = min( yMin_, yMin )
+       ! yMax = max( yMax_, yMax )
+       ! zMin = min( zMin_, zMin )
+       ! zMax = max( zMax_, zMax )
+       
+       ! !  -- [3-6] amplitude modification                --  !
+       ! do k=1, LKr
+       !    do j=1, LJr
+       !       do i=1, LIr
+       !          efields(iF)%EBf(fx_:fz_,i,j,k) = efield_factor * efields(iF)%EBf(fx_:fz_,i,j,k)
+       !       enddo
+       !    enddo
+       ! enddo
+       ! write(6,"(a)",advance="yes") "[Done]"
+       ! !  -- [3-7] time modulation                       --  !
+       ! efields(iF)%modulation = 1.d0
+       
+       ! !  -- [3-8] boundary                        --  !
+       ! efields(iF)%boundary_x = "Neumann"
+       ! efields(iF)%boundary_y = "Neumann"
+       ! efields(iF)%boundary_z = "Neumann"
+
+       ! write(6,"(a)")       " ---------------- EField -------------------- "
+       ! write(6,"(a,i8)"   ) "         LI :: ", efields(iF)%LI
+       ! write(6,"(a,i8)"   ) "         LJ :: ", efields(iF)%LJ
+       ! write(6,"(a,i8)"   ) "         LK :: ", efields(iF)%LK
+       ! write(6,"(a,f15.8)") "       xMin :: ", efields(iF)%xMin
+       ! write(6,"(a,f15.8)") "       xMax :: ", efields(iF)%xMax
+       ! write(6,"(a,f15.8)") "       yMin :: ", efields(iF)%yMin
+       ! write(6,"(a,f15.8)") "       yMax :: ", efields(iF)%yMax
+       ! write(6,"(a,f15.8)") "       zMin :: ", efields(iF)%zMin
+       ! write(6,"(a,f15.8)") "       zMax :: ", efields(iF)%zMax
+       ! write(6,"(a,f15.8)") "         dx :: ", efields(iF)%dx
+       ! write(6,"(a,f15.8)") "         dy :: ", efields(iF)%dy
+       ! write(6,"(a,f15.8)") "         dz :: ", efields(iF)%dz
+       ! write(6,"(a,f15.8)") "      dxInv :: ", efields(iF)%dxInv
+       ! write(6,"(a,f15.8)") "      dyInv :: ", efields(iF)%dyInv
+       ! write(6,"(a,f15.8)") "      dzInv :: ", efields(iF)%dzInv
+       ! write(6,"(a,f15.8)") "  modu_type :: ", efields(iF)%modulation_type
+       ! write(6,"(a,f15.8)") " boundary_x :: ", efields(iF)%boundary_x
+       ! write(6,"(a,f15.8)") " boundary_y :: ", efields(iF)%boundary_y
+       ! write(6,"(a,f15.8)") " boundary_z :: ", efields(iF)%boundary_z
+       ! write(6,"(a,f15.8)") "  amplitude :: ", efields(iF)%amplitude_factor
+       ! write(6,"(a)")       " -------------------------------------------- "

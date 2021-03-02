@@ -71,7 +71,30 @@ def display__initialAxisymmField():
                       color="blue" )
     fig.save__figure()
 
+    # ------------------------------------------------- #
+    # --- [5] 1D plot                               --- #
+    # ------------------------------------------------- #
 
+    config["xTitle"] = "Z (m)"
+    config["yTitle"] = "E (V/m)"
+
+    val   = 0.005
+    eps   = 1.e-10
+    index = np.where( ( efield[:,x_] >= val-eps ) & ( efield[:,x_] <= val+eps ) )
+    xAxis = np.copy( efield[index][:, z_] )
+    ez    = np.copy( efield[index][:,vz_] )
+    ex    = np.copy( efield[index][:,vx_] )
+
+    import nkUtilities.plot1D as pl1
+
+    fig = pl1.plot1D( config=config, pngFile=pngFile.format( "1D" ) )
+    fig.add__plot( xAxis=xAxis, yAxis=ez, color="royalblue", label="Ez" )
+    fig.add__plot( xAxis=xAxis, yAxis=ex, color="magenta"  , label="Ex" )
+    fig.add__legend()
+    fig.set__axis()
+    fig.save__figure()
+
+    
 # ======================================== #
 # ===  実行部                          === #
 # ======================================== #
