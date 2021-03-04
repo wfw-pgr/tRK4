@@ -1,4 +1,4 @@
-import sys
+import sys, subprocess
 import numpy as np
 
 # ========================================================= #
@@ -6,15 +6,20 @@ import numpy as np
 # ========================================================= #
 
 
-def collect__particles():
+def collect__particles( target_time=None ):
 
-    print( "[coolect__particles.py] target_time ?? >>  ", end="" )
-    target_time = input()
+    # ------------------------------------------------- #
+    # --- [0] preparation                           --- #
+    # ------------------------------------------------- #
 
-    if ( len( target_time ) == 0 ):
-        sys.exit("[collect__particles.py] enter time !! ")
-    else:
-        target_time = float( target_time )
+    if ( target_time is None ):
+        print( "[coolect__particles.py] target_time ?? >>  ", end="" )
+        target_time = input()
+
+        if ( len( target_time ) == 0 ):
+            sys.exit("[collect__particles.py] enter time !! ")
+        else:
+            target_time = float( target_time )
     
     # ------------------------------------------------- #
     # --- [1] load constants                        --- #
@@ -76,43 +81,111 @@ def collect__particles():
 
 
 # ========================================================= #
-# ===  plot particle position                           === #
+# ===  plot particle statistic                          === #
 # ========================================================= #
 
-def plot__particle_position():
+def plot__particle_statistic():
 
     x_ , y_ , z_  = 1, 2, 3
-    vx_, vy_, vz_ = 3, 4, 5
+    vx_, vy_, vz_ = 4, 5, 6
+    MeV           = 1.e+6
+
+    # ------------------------------------------------- #
+    # --- [1] load config & data                    --- #
+    # ------------------------------------------------- #
     
-    import nkUtilities.load__config as lcf
-    import nkUtilities.plot1D as pl1
+    cnsFile = "dat/parameter.conf"
+    import nkUtilities.load__constants as lcn
+    const = lcn.load__constants( inpFile=cnsFile )
 
     inpFile = "prb/collected.dat"
     with open( inpFile, "r" ) as f:
         Data = np.loadtxt( f )
-    xAxis = Data[:,x_]
-    yAxis = Data[:,y_]
-    zAxis = Data[:,z_]
-    vz    = Data[:,vz_]
-    print( xAxis.shape, zAxis.shape )
+    xpos   = Data[:,x_]
+    ypos   = Data[:,y_]
+    zpos   = Data[:,z_]
+    vx     = Data[:,vx_]
+    vy     = Data[:,vy_]
+    vz     = Data[:,vz_]
+    beta   = np.sqrt( vx**2 + vy**2 + vz**2 ) / const["cv"]
+    gamma  = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
+    energy = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / const["qe"] / MeV
 
+
+    # ------------------------------------------------- #
+    # --- [2] distribution at target_time           --- #
+    # ------------------------------------------------- #
+
+    pngFile = "png/p_pos_histogram_{0}.png"
+
+    #  -- [2-1]  xpos  -- #
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax  = fig.add_subplot()
+    ax.hist( xpos, bins=300 )
+    fig.savefig( pngFile.format("x") )
+    print( "[collect__particles.py] outFile :: {0} ".format( pngFile.format("x") ) )
+
+    #  -- [2-2]  ypos  -- #
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax  = fig.add_subplot()
+    ax.hist( ypos, bins=300 )
+    fig.savefig( pngFile.format("y") )
+    print( "[collect__particles.py] outFile :: {0} ".format( pngFile.format("y") ) )
+
+    #  -- [2-3]  zpos  -- #
+    import matplotlib.pyplot as plt
+    fig = plt.figure()
+    ax  = fig.add_subplot()
+    ax.hist( zpos, bins=300 )
+    fig.savefig( pngFile.format("z") )
+    print( "[collect__particles.py] outFile :: {0} ".format( pngFile.format("z") ) )
+
+    
+    # ------------------------------------------------- #
+    # --- [3] plot particls positions               --- #
+    # ------------------------------------------------- #
+
+    #  -- [3-0]  common settings   -- #
+    import nkUtilities.plot1D       as pl1
+    import nkUtilities.load__config as lcf
     config = lcf.load__config()
     config["plt_linewidth"] = 0.0
     config["plt_marker"]    = "o"
+    pngFile                 = "png/dist_at_time_{0}.png"
 
-    import matplotlib.pyplot as plt
-    pngFile = "png/x_vs_z.png"
+    #  -- [3-1]  xy dist  -- #
+    config["xTitle"] = "x (m)"
+    config["yTitle"] = "y (m)"
+    fig = pl1.plot1D( xAxis=xpos, yAxis=ypos, config=config, pngFile=pngFile.format( "x" ) )
 
-    plt.hist( zAxis, bins=50 )
-    plt.savefig( pngFile )
+    #  -- [3-2]  zx dist  -- #
+    config["xTitle"] = "z (m)"
+    config["yTitle"] = "x (m)"
+    fig = pl1.plot1D( xAxis=zpos, yAxis=xpos, config=config, pngFile=pngFile.format( "y" ) )
+
+    #  -- [3-3]  zy dist  -- #
+    config["xTitle"] = "z (m)"
+    config["yTitle"] = "y (m)"
+    fig = pl1.plot1D( xAxis=zpos, yAxis=ypos, config=config, pngFile=pngFile.format( "z" ) )
+
+
+    # ------------------------------------------------- #
+    # --- [4] energy dist.                          --- #
+    # ------------------------------------------------- #
+    #  -- [4-0]  config  settings    -- #
+    config["plt_xAutoRange"] = False
+    config["plt_yAutoRange"] = False
+    config["plt_xRange"]     = [0.0,0.8]
+    config["plt_yRange"]     = [0.0,0.2]
+    config["xTitle"]         = "z (m)"
+    config["yTitle"]         = "Energy (MeV)"
+    #  -- [4-1]  plot energy dist.   -- #
+    pngFile = "png/dist_at_time_z_energy.png"
+    fig     = pl1.plot1D( xAxis=zpos, yAxis=energy, config=config, pngFile=pngFile )
     
-    # fig = pl1.plot1D( config=config, pngFile=pngFile )
-    # fig.add__plot( xAxis=zAxis, yAxis=vz )
-    # fig.add__legend()
-    # fig.set__axis()
-    # fig.save__figure()
-
-
+    
 
 
 # ========================================================= #
@@ -120,5 +193,39 @@ def plot__particle_position():
 # ========================================================= #
 
 if ( __name__=="__main__" ):
-    collect__particles()
-    plot__particle_position()
+
+    # mode = "single"
+    mode = "successive"
+    
+    # ------------------------------------------------- #
+    # --- [1] select time ver.                      --- #
+    # ------------------------------------------------- #
+
+    if ( mode == "single" ):
+        collect__particles()
+        plot__particle_statistic()
+
+
+    # ------------------------------------------------- #
+    # --- [2] time given in array                   --- #
+    # ------------------------------------------------- #
+
+    if ( mode == "successive" ):
+    
+        tMin = 1.e-9
+        tMax = 4.e-9
+        nt   = 7
+    
+        timelist = np.linspace( tMin, tMax, nt )
+        
+        for ik,time in enumerate( timelist ):
+            
+            cmd = "mkdir -p sav/dir{0}".format( ik )
+            subprocess.call( cmd.split() )
+            print( "time = {0}".format( timelist[ik] ) )
+            
+            collect__particles( target_time=timelist[ik] )
+            plot__particle_statistic( target_time=timelist[ik] )
+            cmd = "mv png/* sav/dir{0}".format( ik )
+            subprocess.call( cmd, shell=True )
+            

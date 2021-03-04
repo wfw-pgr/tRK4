@@ -18,6 +18,9 @@ contains
     ! ------------------------------------------------------ !
     hdt =    0.5d0 * dt
     sdt = onesixth * dt
+    !$omp parallel default(none) &
+    !$omp shared(pxv,npt,hdt,sdt,dt) private(ipt,kx1,kv1,kx2,kv2,kx3,kv3,kx4,kv4)
+    !$omp do
     do ipt=1, npt
 
        if ( pxv(wt_,ipt).eq.0.d0 ) cycle
@@ -45,6 +48,9 @@ contains
        pxv(vx_:vz_,ipt) = pxv(vx_:vz_,ipt) + sdt * ( kv1 + 2.d0*kv2 + 2.d0*kv3 + kv4 )
        
     enddo
+    !$omp end do
+    !$omp end parallel
+    
     return
   end subroutine RK4__tracker
     
