@@ -13,26 +13,15 @@ contains
     ! --- [1] initialization of constants                --- !
     ! ------------------------------------------------------ !
     qm    =  qe / Mp
-
-    ! ------------------------------------------------------ !
-    ! --- [2] initialization of length                   --- !
-    ! ------------------------------------------------------ !
-
-    ! ------------------------------------------------------ !
-    ! --- [3] initialization of time sequence            --- !
-    ! ------------------------------------------------------ !
     ptime = t_simuStart
 
-
     ! ------------------------------------------------------ !
-    ! --- [4] display variables                          --- !
+    ! --- [2] display variables                          --- !
     ! ------------------------------------------------------ !
-    
     write(6,"(a)"            ) "[initialize__variables]    ========  [initialized variables   ]  ======== "
-    write(6,"(a,18x,a,e15.8)") "qm"   ,  " :: ", qm
+    write(6,"(a,18x,a,e15.8)") "qm   ",  " :: ", qm
     write(6,"(a,18x,a,e15.8)") "ptime",  " :: ", ptime
     write(6,"(a)"            ) "[initialize__variables]    ============================================== "    
-    
     return
   end subroutine initialize__variables
 
@@ -46,8 +35,9 @@ contains
     integer :: iF, i, j, k
 
     ! ------------------------------------------------------ !
-    ! --- [1] boundary box                               --- !
+    ! --- [1] boundary box ( typ. dxInv :: for auto_dt ) --- !
     ! ------------------------------------------------------ !
+    !  -- [1-1] search boundary box                      --  !
     xMin = + 1.e10
     xMax = - 1.e10
     yMin = + 1.e10
@@ -79,10 +69,7 @@ contains
        dy   = min(   dy, bfields(iF)%dy   )
        dz   = min(   dz, bfields(iF)%dz   )
     enddo
-    xLeng   = xMax - xMin
-    yLeng   = yMax - yMin
-    zLeng   = zMax - zMin
-    
+    !  -- [1-2] dxInv :: for auto_dt determination       --  !
     if ( dx.eq.0.d0 ) then
        dxInv = 0.d0
     else
@@ -125,33 +112,18 @@ contains
     write(6,"(a,16x,a,e15.8)") "yMax" ,  " :: ", yMax
     write(6,"(a,16x,a,e15.8)") "zMin" ,  " :: ", zMin
     write(6,"(a,16x,a,e15.8)") "zMax" ,  " :: ", zMax
-    write(6,"(a,15x,a,e15.8)") "xLeng",  " :: ", xLeng
-    write(6,"(a,15x,a,e15.8)") "yLeng",  " :: ", yLeng
-    write(6,"(a,15x,a,e15.8)") "zLeng",  " :: ", zLeng
-    write(6,"(a,18x,a,e15.8)") "dx"   ,  " :: ", dx
-    write(6,"(a,18x,a,e15.8)") "dy"   ,  " :: ", dy
-    write(6,"(a,18x,a,e15.8)") "dz"   ,  " :: ", dz
+    write(6,"(a,16x,a,e15.8)") "dx"   ,  " :: ", dx
+    write(6,"(a,16x,a,e15.8)") "dy"   ,  " :: ", dy
+    write(6,"(a,16x,a,e15.8)") "dz"   ,  " :: ", dz
+    write(6,"(a,16x,a,e15.8)") "dxInv",  " :: ", dxInv
+    write(6,"(a,16x,a,e15.8)") "dyInv",  " :: ", dyInv
+    write(6,"(a,16x,a,e15.8)") "dzInv",  " :: ", dzInv
     write(6,"(a,16x,a,e15.8)") "BMax" ,  " :: ", BMax
     write(6,"(a)"            ) "[check__scale_of_variables]    ============================================== "    
     
     return
   end subroutine check__scale_of_variables
   
-  
-  ! ====================================================== !
-  ! === initialize periodic field condition            === !
-  ! ====================================================== !
-  subroutine initialize__periodicField
-    use variablesMod
-    implicit none
-
-    allocate( period_counter(npt) )
-    period_counter(:) = 0
-    write(6,"(a)") "[initialize__periodicField] initilizing period_counter... [Done]"
-    return
-  end subroutine initialize__periodicField
-
-
   
   ! ====================================================== !
   ! === initialize axisymmetric mode                   === !
@@ -165,14 +137,6 @@ contains
     ! ------------------------------------------------------ !
     ! --- [1] check simulation condition                 --- !
     ! ------------------------------------------------------ !
-    if ( ( yMin.ne.0.d0 ).or.( yMax.ne.0.d0 ) ) then
-       write(6,"(a)") "[initialize__axisymmMode]  illegal coordinate  [ERROR]"
-       write(6,*    ) "            :: flag__axisymmetry   :: ", flag__axisymmetry
-       write(6,*    ) "            :: LJ   ( == 1 )       :: ", LJ
-       write(6,*    ) "            :: yMin ( == 0 )       :: ", yMin
-       write(6,*    ) "            :: yMax ( == 0 )       :: ", yMax
-       stop
-    endif
     do iF=1, nEField
        if ( trim(efields(iF)%boundary_y).ne."Neumann" ) then
           write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
@@ -300,7 +264,6 @@ contains
     return
   end subroutine 
 
-
 end module initiatorMod
 
 
@@ -353,3 +316,19 @@ end module initiatorMod
     !    endif
     !    dt_wci = 10.d0 * dt_CFL
     ! endif
+
+
+  ! ! ====================================================== !
+  ! ! === initialize periodic field condition            === !
+  ! ! ====================================================== !
+  ! subroutine initialize__periodicField
+  !   use variablesMod
+  !   implicit none
+
+  !   allocate( period_counter(npt) )
+  !   period_counter(:) = 0
+  !   write(6,"(a)") "[initialize__periodicField] initilizing period_counter... [Done]"
+  !   return
+  ! end subroutine initialize__periodicField
+
+  

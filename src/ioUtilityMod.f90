@@ -10,24 +10,16 @@ contains
     character(cLen)          :: cmt
     character(17), parameter :: char_fmt = "(a24,1x,a14,1x,a)"
 
-    namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
-         &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
-         &                popoutFile, bpmFile, EFieldListFile, BFieldListFile,              &
-         &                EFieldparamFile, BFieldParamFile,                                 &
-         &                flag__EField, flag__BField, flag__axisymmetry,                    &
-         &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
-         &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
+    namelist /parameters/ mp, qe, &
+         &                particleFile, probeFileBase, popoutFile, bpmFile,                 &
+         &                EFieldListFile, BFieldListFile, EFieldparamFile, BFieldParamFile, &
+         &                flag__axisymmetry, flag__popoutBoundary, flag__probeField,        &
          &                flag__beamposmonitor,                                             &
-         &                efield_factor, bfield_factor,                                     &
-         &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
          &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
-         &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
-         &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq, &
-         &                phase_delay,                                                      &
+         &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL,       &
          &                bpm_direction, bpm_screen_pos,                                    &
-         &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,    &
-         &                t_probeStart, t_probeStep, t_probeEnd
-    
+         &                t_simuStart, t_simuEnd, t_probeStart, t_probeStep, t_probeEnd
+
     open(lun,file=trim(configFile),status="old",form="formatted")
     read(lun,nml=parameters)
     close(lun)
@@ -48,12 +40,13 @@ contains
     logical, parameter :: flag__particleCheck = .false.
     
     ! ------------------------------------------------------ !
-    ! --- [1] prepare pxv                                --- !
+    ! --- [1] load particles into  pxv                   --- !
     ! ------------------------------------------------------ !
+    !  -- [1-1] Message                                  --  !
     write(6,*)
     write(6,"(a,a)") "[load__particles]  particles :: ", trim( particleFile )
     write(6,"(a)",advance="no" ) "[load__particles]  loading particles.... "
-
+    !  -- [1-2] Load File Data                           --  !
     open(lun,file=trim(particleFile),form="formatted")
     read(lun,*) cmt
     read(lun,*) cmt
@@ -64,7 +57,7 @@ contains
        read(lun,*) pxv(xp_:vz_,ipt)
     enddo
     close(lun)
-    
+    !  -- [1-3] Message                                  --  !
     write(6,"(a)",advance="yes") "[Done]"
     write(6,"(a,i8)") "[load__particles] Number of Particles ::  ", npt
     write(6,*)
@@ -106,25 +99,19 @@ contains
     ! ------------------------------------------------------ !
     ! --- [1] Preparation                                --- !
     ! ------------------------------------------------------ !
+    !  -- [1-1] Message                                  --  !
     write(6,*)
     write(6,"(a,a)")  "[load__ebFieldFile]  eFieldListFile   :: ", trim( EFieldListFile )
     write(6,"(a,a)")  "[load__ebFieldFile]  bFieldListFile   :: ", trim( BFieldListFile )
     write(6,*)
+    !  -- [1-2] File List Length & allocation            --  !
     call count__nlines( EFieldListFile, nEField )
     call count__nlines( BFieldListFile, nBField )
     write(6,"(a,i8)") "[load__ebFieldFile]  #. of eFieldFile :: ", nEField
     write(6,"(a,i8)") "[load__ebFieldFile]  #. of bFieldFile :: ", nBField
     write(6,*)
-
     allocate( efields(nEField) )
     allocate( bfields(nBField) )
-    
-    xMin = + 1.e10
-    xMax = - 1.e10
-    yMin = + 1.e10
-    yMax = - 1.e10
-    zMin = + 1.e10
-    zMax = - 1.e10
 
     ! ------------------------------------------------------ !
     ! --- [2] obtain FileName List                       --- !
@@ -190,18 +177,19 @@ contains
     character(cLen), intent(in)    :: FieldFile
     type(field)    , intent(inout) :: afield
     integer        , intent(in)    :: ith
-    character(cLen)  :: cmt, key
-    integer          :: i, j, k, LIr, LJr, LKr, nCmpr, iL
-    double precision :: xMin_, xMax_, yMin_, yMax_, zMin_, zMax_
+    character(cLen)                :: cmt, key
+    integer                        :: i, j, k, LIr, LJr, LKr, nCmpr, iL
+    double precision               :: xMin_, xMax_, yMin_, yMax_, zMin_, zMax_
 
-    !  -- [3-1] EField Data File Name                 --  !
+    ! ------------------------------------------------------ !
+    ! --- [1] Load EBf shape & Data                      --- !
+    ! ------------------------------------------------------ !
+    !  -- [1-1] EField Data File Name                    --  !
     write(6,"(a,a)") "[load__singleFieldFile]  FieldFile :: ", trim( FieldFile )
     write(6,"(a)",advance="no" ) "[load__singleFieldFile]  loading Field.... "
-
-    !  -- [3-2] fetch EField Data                     --  !
-    open (lun,file=trim(FieldFile),status="old",form="formatted")
     
-    !  -- [3-3] get Field shape information           --  !
+    !  -- [1-2] get Field shape information              --  !
+    open (lun,file=trim(FieldFile),status="old",form="formatted")
     read (lun,*) cmt
     read (lun,*) cmt
     read (lun,*) cmt, LKr, LJr, LIr, nCmpr
@@ -209,7 +197,7 @@ contains
     afield%LJ = LJr
     afield%LK = LKr
     
-    !  -- [3-4] fetch field information               --  !
+    !  -- [1-3] fetch field information               --  !
     allocate( afield%EBf(6,-2:LIr+3,-2:LJr+3,-2:LKr+3) )
     afield%EBf(:,:,:,:) = 0.d0
     do k=1, LKr
@@ -219,25 +207,29 @@ contains
           enddo
        enddo
     enddo
-    
     close(lun)
     write(6,"(a)",advance="yes") "[Done]"
 
-    !  -- [3-5] field parameters                      --  !
+    ! ------------------------------------------------------ !
+    ! --- [2] Load Field Parameters                      --- !
+    ! ------------------------------------------------------ !
     open (lun,file=trim(EFieldParamFile),status="old")
     read (lun,*) cmt
     do iL=1, ith-1
        read(lun,*)
     enddo
-    read (lun,*) key, afield%amplitude_factor, afield%xshift, afield%yshift, &
-         & afield%zshift, afield%modulation_type, &
+    read (lun,*) key, afield%amplitude_factor, afield%frequency, afield%phase, &
+         & afield%xshift, afield%yshift, afield%zshift, afield%modulation_type, &
          & afield%boundary_x, afield%boundary_y, afield%boundary_z, &
          & afield%nRepeat_x, afield%nRepeat_y, afield%nRepeat_z
     close(lun)
     
     afield%modulation = 1.d0
 
-    !  -- [3-6] get bounding coordinate of the field  --  !
+    ! ------------------------------------------------------ !
+    ! --- [3] Bounding Coordinate of the field           --- !
+    ! ------------------------------------------------------ !
+    !  -- [3-1] get bounding coordinate of the field     --  !
     xMin_ = afield%EBf(xp_,1,1,1)
     xMax_ = afield%EBf(xp_,1,1,1)
     yMin_ = afield%EBf(yp_,1,1,1)
@@ -262,29 +254,10 @@ contains
     afield%yMax = yMax_ + afield%yshift
     afield%zMin = zMin_ + afield%zshift
     afield%zMax = zMax_ + afield%zshift
-
-    if ( flag__axisymmetry ) then
-       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
-       afield%dy    =   0.d0
-       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
-       afield%dxInv = 1.d0 / afield%dx
-       afield%dyInv = 0.d0
-       afield%dzInv = 1.d0 / afield%dz
-    else
-       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
-       afield%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
-       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
-       afield%dxInv = 1.d0 / afield%dx
-       afield%dyInv = 1.d0 / afield%dy
-       afield%dzInv = 1.d0 / afield%dz
-    endif
-    xMin = min( xMin_, xMin )
-    xMax = max( xMax_, xMax )
-    yMin = min( yMin_, yMin )
-    yMax = max( yMax_, yMax )
-    zMin = min( zMin_, zMin )
-    zMax = max( zMax_, zMax )
-
+    
+    ! ------------------------------------------------------ !
+    ! --- [4]  Field Size :: xyzLeng / xyzLengInv        --- !
+    ! ------------------------------------------------------ !
     if ( flag__axisymmetry ) then
        afield%xLeng    =  xMax_ - xMin_
        afield%yLeng    =  0.d0
@@ -301,6 +274,28 @@ contains
        afield%zLengInv =  1.d0 / afield%zLeng
     endif
 
+    ! ------------------------------------------------------ !
+    ! --- [5] Field Grid Size :: (dx,dy,dz) & invert     --- !
+    ! ------------------------------------------------------ !
+    if ( flag__axisymmetry ) then
+       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       afield%dy    =   0.d0
+       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       afield%dxInv = 1.d0 / afield%dx
+       afield%dyInv = 0.d0
+       afield%dzInv = 1.d0 / afield%dz
+    else
+       afield%dx    = ( xMax_ - xMin_ ) / dble( LIr-1 )
+       afield%dy    = ( yMax_ - yMin_ ) / dble( LJr-1 )
+       afield%dz    = ( zMax_ - zMin_ ) / dble( LKr-1 )
+       afield%dxInv = 1.d0 / afield%dx
+       afield%dyInv = 1.d0 / afield%dy
+       afield%dzInv = 1.d0 / afield%dz
+    endif
+
+    ! ------------------------------------------------------ !
+    ! --- [6] Periodic Repetition :: Expand Bounding     --- !
+    ! ------------------------------------------------------ !
     if ( afield%nRepeat_x.ge.2 ) then
        afield%xMax = afield%xMin + afield%xLeng * afield%nRepeat_x
     endif
@@ -310,7 +305,10 @@ contains
     if ( afield%nRepeat_z.ge.2 ) then
        afield%zMax = afield%zMin + afield%zLeng * afield%nRepeat_z
     endif
-    
+
+    ! ------------------------------------------------------ !
+    ! --- [7] Display Field structure                    --- !
+    ! ------------------------------------------------------ !
     write(6,"(a)")       " ----------------  Field  -------------------- "
     write(6,"(a,i8)"   ) "         LI :: ", afield%LI
     write(6,"(a,i8)"   ) "         LJ :: ", afield%LJ
@@ -334,6 +332,8 @@ contains
     write(6,"(a,f15.8)") "   yLengInv :: ", afield%yLengInv
     write(6,"(a,f15.8)") "   zLengInv :: ", afield%zLengInv
     write(6,"(a,f15.8)") "  amplitude :: ", afield%amplitude_factor
+    write(6,"(a,e15.8)") "  frequency :: ", afield%frequency
+    write(6,"(a,f15.8)") "      phase :: ", afield%phase
     write(6,"(a,a)"    ) "  modu_type :: ", afield%modulation_type
     write(6,"(a,a)"    ) " boundary_x :: ", afield%boundary_x
     write(6,"(a,a)"    ) " boundary_y :: ", afield%boundary_y
@@ -346,122 +346,6 @@ contains
     
     return
   end subroutine load__singleFieldFile
-  
-  
-  ! ====================================================== !
-  ! === save__particles in a file                      === !
-  ! ====================================================== !
-  subroutine save__particles( action )
-    use variablesMod
-    implicit none
-    character(5)    , intent(in)  :: action
-    integer                       :: ipt, ibuff
-    character(6)                  :: cpt
-    character(cLen)               :: trackFile
-    integer         , save        :: buff_count
-    
-    ! ------------------------------------------------------ !
-    ! --- [1] initialization                             --- !
-    ! ------------------------------------------------------ !
-    if ( trim(action).eq."initi" ) then
-       write(6,"(a)",advance="no") "[save__particles] action :: Initialization of track files... "
-       !  -- [1-1] file initialization                   --  !
-       do ipt=1, npt
-          write(cpt,"(i6.6)") ipt
-          trackFile = trim( trackFileBase ) // cpt // ".dat"
-          open( lun,file=trim(trackFile),form="formatted",status="replace" )
-          write(lun,"(a)") "# time xp yp zp vx vy vz xo yo zo ux uy uz wt"
-          close(lun)
-       enddo
-       !  -- [1-2] buff initialization                   --  !
-       allocate( pxvbuff(14,npt,buffLength), nbuff_save(npt) )
-       pxvbuff(:,:,:) = 0.d0
-       nbuff_save(:)  = 0
-       buff_count     = 0
-       !  -- [1-3] time schedule settings                --  !
-       t_nextSave     = t_trackStart
-       write(6,"(a)",advance="yes") "[Done]"
-    endif
-
-    ! ------------------------------------------------------ !
-    ! --- [2] store in buffer                            --- !
-    ! ------------------------------------------------------ !
-    if ( trim(action).eq."store" ) then
-       buff_count = buff_count + 1
-       do ipt=1, npt
-          if ( pxv(wt_,ipt).gt.0.d0 ) then
-             pxvbuff(   1,ipt,buff_count) = ptime
-             pxvbuff(2:14,ipt,buff_count) = pxv(1:13,ipt)
-             nbuff_save(ipt)              = nbuff_save(ipt) + 1
-          endif
-       enddo
-       ! -- cyclic coordinate output -- !
-       if ( flag__cyclicCoordinate ) then
-          ! -- cyclic particle coordinate [xMin,xMax] -- !
-          ! -- nothing to do -- !
-       else 
-          if ( trim(particleBoundary__x).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   pxvbuff(xp_+1,ipt,buff_count) = pxvbuff(xp_+1,ipt,buff_count) &
-                        &                        + dble( period_counter(ipt) )*xLeng
-                endif
-             enddo
-          endif
-          if ( trim(particleBoundary__y).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   pxvbuff(yp_+1,ipt,buff_count) = pxvbuff(yp_+1,ipt,buff_count) &
-                        &                        + dble( period_counter(ipt) )*yLeng
-                endif
-             enddo
-          endif
-          if ( trim(particleBoundary__z).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   pxvbuff(zp_+1,ipt,buff_count) = pxvbuff(zp_+1,ipt,buff_count) &
-                        &                        + dble( period_counter(ipt) )*zLeng
-                endif
-             enddo
-          endif
-       endif
-       ! ------------------------------ !
-    endif
-
-    ! ------------------------------------------------------ !
-    ! --- [3] save (buff is full)                        --- !
-    ! ------------------------------------------------------ !
-    if ( ( buff_count.eq.buffLength ).or.( trim(action).eq."final" ) ) then
-       !  -- [3-1] save buff contents                    --  !
-       do ipt=1, npt
-          if ( nbuff_save(ipt).gt.0 ) then
-             write(cpt,"(i6.6)") ipt
-             trackFile = trim( trackFileBase ) // cpt // ".dat"
-             open( lun,file=trim(trackFile),form="formatted",position="append" )
-             do ibuff=1, nbuff_save(ipt)
-                write(lun,"(14(e15.8,1x))") pxvbuff(:,ipt,ibuff)
-             enddo
-             close(lun)
-          endif
-       enddo
-       !  -- [3-2] buff counter reset                    --  !
-       buff_count       = 0
-       nbuff_save(:)    = 0
-    end if
-
-    ! ------------------------------------------------------ !
-    ! --- [4] update next schedule                       --- !
-    ! ------------------------------------------------------ !
-    if ( trim(action).eq."store" ) then
-       if ( ptime.gt.t_trackEnd ) then
-          t_nextSave = t_nextSave + 2.0d0*( t_simuEnd - t_simuStart )
-       else
-          t_nextSave = t_nextSave + t_trackStep
-       endif
-    endif
-    
-    return
-  end subroutine save__particles
   
 
 end module ioUtilityMod
@@ -1174,3 +1058,140 @@ end module ioUtilityMod
        ! write(6,"(a,f15.8)") " boundary_z :: ", efields(iF)%boundary_z
        ! write(6,"(a,f15.8)") "  amplitude :: ", efields(iF)%amplitude_factor
        ! write(6,"(a)")       " -------------------------------------------- "
+
+
+
+  
+  ! ! ====================================================== !
+  ! ! === save__particles in a file                      === !
+  ! ! ====================================================== !
+  ! subroutine save__particles( action )
+  !   use variablesMod
+  !   implicit none
+  !   character(5)    , intent(in)  :: action
+  !   integer                       :: ipt, ibuff
+  !   character(6)                  :: cpt
+  !   character(cLen)               :: trackFile
+  !   integer         , save        :: buff_count
+    
+  !   ! ------------------------------------------------------ !
+  !   ! --- [1] initialization                             --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(action).eq."initi" ) then
+  !      write(6,"(a)",advance="no") "[save__particles] action :: Initialization of track files... "
+  !      !  -- [1-1] file initialization                   --  !
+  !      do ipt=1, npt
+  !         write(cpt,"(i6.6)") ipt
+  !         trackFile = trim( trackFileBase ) // cpt // ".dat"
+  !         open( lun,file=trim(trackFile),form="formatted",status="replace" )
+  !         write(lun,"(a)") "# time xp yp zp vx vy vz xo yo zo ux uy uz wt"
+  !         close(lun)
+  !      enddo
+  !      !  -- [1-2] buff initialization                   --  !
+  !      allocate( pxvbuff(14,npt,buffLength), nbuff_save(npt) )
+  !      pxvbuff(:,:,:) = 0.d0
+  !      nbuff_save(:)  = 0
+  !      buff_count     = 0
+  !      !  -- [1-3] time schedule settings                --  !
+  !      t_nextSave     = t_trackStart
+  !      write(6,"(a)",advance="yes") "[Done]"
+  !   endif
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [2] store in buffer                            --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(action).eq."store" ) then
+  !      buff_count = buff_count + 1
+  !      do ipt=1, npt
+  !         if ( pxv(wt_,ipt).gt.0.d0 ) then
+  !            pxvbuff(   1,ipt,buff_count) = ptime
+  !            pxvbuff(2:14,ipt,buff_count) = pxv(1:13,ipt)
+  !            nbuff_save(ipt)              = nbuff_save(ipt) + 1
+  !         endif
+  !      enddo
+  !      ! -- cyclic coordinate output -- !
+  !      if ( flag__cyclicCoordinate ) then
+  !         ! -- cyclic particle coordinate [xMin,xMax] -- !
+  !         ! -- nothing to do -- !
+  !      else 
+  !         if ( trim(particleBoundary__x).eq."periodic" ) then
+  !            do ipt=1, npt
+  !               if ( pxv(wt_,ipt).gt.0.d0 ) then
+  !                  pxvbuff(xp_+1,ipt,buff_count) = pxvbuff(xp_+1,ipt,buff_count) &
+  !                       &                        + dble( period_counter(ipt) )*xLeng
+  !               endif
+  !            enddo
+  !         endif
+  !         if ( trim(particleBoundary__y).eq."periodic" ) then
+  !            do ipt=1, npt
+  !               if ( pxv(wt_,ipt).gt.0.d0 ) then
+  !                  pxvbuff(yp_+1,ipt,buff_count) = pxvbuff(yp_+1,ipt,buff_count) &
+  !                       &                        + dble( period_counter(ipt) )*yLeng
+  !               endif
+  !            enddo
+  !         endif
+  !         if ( trim(particleBoundary__z).eq."periodic" ) then
+  !            do ipt=1, npt
+  !               if ( pxv(wt_,ipt).gt.0.d0 ) then
+  !                  pxvbuff(zp_+1,ipt,buff_count) = pxvbuff(zp_+1,ipt,buff_count) &
+  !                       &                        + dble( period_counter(ipt) )*zLeng
+  !               endif
+  !            enddo
+  !         endif
+  !      endif
+  !      ! ------------------------------ !
+  !   endif
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [3] save (buff is full)                        --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( ( buff_count.eq.buffLength ).or.( trim(action).eq."final" ) ) then
+  !      !  -- [3-1] save buff contents                    --  !
+  !      do ipt=1, npt
+  !         if ( nbuff_save(ipt).gt.0 ) then
+  !            write(cpt,"(i6.6)") ipt
+  !            trackFile = trim( trackFileBase ) // cpt // ".dat"
+  !            open( lun,file=trim(trackFile),form="formatted",position="append" )
+  !            do ibuff=1, nbuff_save(ipt)
+  !               write(lun,"(14(e15.8,1x))") pxvbuff(:,ipt,ibuff)
+  !            enddo
+  !            close(lun)
+  !         endif
+  !      enddo
+  !      !  -- [3-2] buff counter reset                    --  !
+  !      buff_count       = 0
+  !      nbuff_save(:)    = 0
+  !   end if
+
+  !   ! ------------------------------------------------------ !
+  !   ! --- [4] update next schedule                       --- !
+  !   ! ------------------------------------------------------ !
+  !   if ( trim(action).eq."store" ) then
+  !      if ( ptime.gt.t_trackEnd ) then
+  !         t_nextSave = t_nextSave + 2.0d0*( t_simuEnd - t_simuStart )
+  !      else
+  !         t_nextSave = t_nextSave + t_trackStep
+  !      endif
+  !   endif
+    
+  !   return
+  ! end subroutine save__particles
+  
+
+    ! namelist /parameters/ particleFile, EFieldFile, BFieldFile, twEigenFile1, twEigenFile2, &
+    !      &                type__EFieldFile, type__BFieldFile, trackFileBase, probeFileBase, &
+    !      &                popoutFile, bpmFile, EFieldListFile, BFieldListFile,              &
+    !      &                EFieldparamFile, BFieldParamFile,                                 &
+    !      &                flag__EField, flag__BField, flag__axisymmetry,                    &
+    !      &                flag__standingWave, flag__travellingWave, flag__cyclicCoordinate, &
+    !      &                flag__saveParticle, flag__probeField, flag__popoutBoundary,       &
+    !      &                flag__beamposmonitor,                                             &
+    !      &                efield_factor, bfield_factor,                                     &
+    !      &                FieldBoundary__x, FieldBoundary__y, FieldBoundary__z,             &
+    !      &                particleBoundary__x, particleBoundary__y, particleBoundary__z,    &
+    !      &                LI, LJ, LK, xMin, xMax, yMin, yMax, zMin, zMax,                   &
+    !      &                type__iterMax, type__dt, iterMax, dt, alpha_wci, alpha_CFL, freq, &
+    !      &                phase_delay,                                                      &
+    !      &                bpm_direction, bpm_screen_pos,                                    &
+    !      &                t_simuStart, t_simuEnd, t_trackStart, t_trackStep, t_trackEnd,    &
+    !      &                t_probeStart, t_probeStep, t_probeEnd

@@ -8,6 +8,7 @@ contains
     use variablesMod
     implicit none
     integer                     :: iF
+    double precision            :: phi
     double precision, parameter :: twopi = 16.d0 * atan(1.d0)
 
     ! ------------------------------------------------------ !
@@ -15,9 +16,11 @@ contains
     ! ------------------------------------------------------ !
     do iF=1, nEField
        if      ( trim(efields(iF)%modulation_type).eq."cos" ) then
-          efields(iF)%modulation = cos( twopi*freq*ptime + phase_delay/360.0*twopi )
+          phi = twopi*efields(iF)%frequency*ptime + efields(iF)%phase/360.0*twopi
+          efields(iF)%modulation = cos( phi )
        else if ( trim(efields(iF)%modulation_type).eq."sin" ) then
-          efields(iF)%modulation = sin( twopi*freq*ptime + phase_delay/360.0*twopi )
+          phi = twopi*efields(iF)%frequency*ptime + efields(iF)%phase/360.0*twopi
+          efields(iF)%modulation = sin( phi )
        else if ( trim(efields(iF)%modulation_type).eq."off" ) then
           efields(iF)%modulation = 1.d0
        else
@@ -31,9 +34,11 @@ contains
     ! ------------------------------------------------------ !
     do iF=1, nBField
        if      ( trim(bfields(iF)%modulation_type).eq."cos" ) then
-          bfields(iF)%modulation = cos( twopi*freq*ptime + phase_delay/360.0*twopi )
+          phi = twopi*bfields(iF)%frequency*ptime + bfields(iF)%phase/360.0*twopi
+          bfields(iF)%modulation = cos( phi )
        else if ( trim(bfields(iF)%modulation_type).eq."sin" ) then
-          bfields(iF)%modulation = sin( twopi*freq*ptime + phase_delay/360.0*twopi )
+          phi = twopi*bfields(iF)%frequency*ptime + bfields(iF)%phase/360.0*twopi
+          bfields(iF)%modulation = sin( phi )
        else if ( trim(bfields(iF)%modulation_type).eq."off" ) then
           bfields(iF)%modulation = 1.d0
        else

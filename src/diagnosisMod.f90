@@ -47,7 +47,6 @@ contains
        store_count = store_count + 1
 
        do ipt=1, npt
-          
           !  -- [2-1] not moving particle                   --  !
           if ( pxv(wt_,ipt).eq.0.d0 ) cycle
           
@@ -63,40 +62,8 @@ contains
           probeBuff(8:13,ipt,store_count) = EBp(1:6)
           probeBuff(  14,ipt,store_count) = pxv(    wt_,ipt)
           probe_counter(ipt)              = probe_counter(ipt) + 1
-          
        enddo
        
-       ! -- cyclic coordinate output -- !
-       if ( flag__cyclicCoordinate ) then
-          ! -- cyclic particle coordinate [xMin,xMax] -- !
-          ! -- nothing to do -- !
-       else 
-          if ( trim(particleBoundary__x).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   probeBuff(xp_+1,ipt,store_count) = probeBuff(xp_+1,ipt,store_count) &
-                        &                             + dble( period_counter(ipt) )*xLeng
-                endif
-             enddo
-          endif
-          if ( trim(particleBoundary__y).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   probeBuff(yp_+1,ipt,store_count) = probeBuff(yp_+1,ipt,store_count) &
-                        &                             + dble( period_counter(ipt) )*yLeng
-                endif
-             enddo
-          endif
-          if ( trim(particleBoundary__z).eq."periodic" ) then
-             do ipt=1, npt
-                if ( pxv(wt_,ipt).gt.0.d0 ) then
-                   probeBuff(zp_+1,ipt,store_count) = probeBuff(zp_+1,ipt,store_count) &
-                        &                             + dble( period_counter(ipt) )*zLeng
-                endif
-             enddo
-          endif
-       endif
-       ! ------------------------------ !
     endif
 
     ! ------------------------------------------------------ !
@@ -167,7 +134,6 @@ contains
        cur_idx = zp_
        old_idx = zo_
     endif
-    
 
     ! ------------------------------------------------------ !
     ! --- [2] write bpm result                           --- !
@@ -190,7 +156,6 @@ contains
     
     return
   end subroutine screen__beamPosMonitor
-
 
 end module diagnosisMod
 
@@ -223,3 +188,37 @@ end module diagnosisMod
 ! else
 !    EBp(:) = 0.d0
 ! endif
+
+
+
+       ! ! -- cyclic coordinate output -- !
+       ! if ( flag__cyclicCoordinate ) then
+       !    ! -- cyclic particle coordinate [xMin,xMax] -- !
+       !    ! -- nothing to do -- !
+       ! else 
+       !    if ( trim(particleBoundary__x).eq."periodic" ) then
+       !       do ipt=1, npt
+       !          if ( pxv(wt_,ipt).gt.0.d0 ) then
+       !             probeBuff(xp_+1,ipt,store_count) = probeBuff(xp_+1,ipt,store_count) &
+       !                  &                             + dble( period_counter(ipt) )*xLeng
+       !          endif
+       !       enddo
+       !    endif
+       !    if ( trim(particleBoundary__y).eq."periodic" ) then
+       !       do ipt=1, npt
+       !          if ( pxv(wt_,ipt).gt.0.d0 ) then
+       !             probeBuff(yp_+1,ipt,store_count) = probeBuff(yp_+1,ipt,store_count) &
+       !                  &                             + dble( period_counter(ipt) )*yLeng
+       !          endif
+       !       enddo
+       !    endif
+       !    if ( trim(particleBoundary__z).eq."periodic" ) then
+       !       do ipt=1, npt
+       !          if ( pxv(wt_,ipt).gt.0.d0 ) then
+       !             probeBuff(zp_+1,ipt,store_count) = probeBuff(zp_+1,ipt,store_count) &
+       !                  &                             + dble( period_counter(ipt) )*zLeng
+       !          endif
+       !       enddo
+       !    endif
+       ! endif
+       ! ! ------------------------------ !
