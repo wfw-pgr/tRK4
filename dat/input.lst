@@ -1,8 +1,8 @@
 &parameters
-EFieldListFile           = "dat/efieldlist.conf"
-BFieldListFile           = "dat/bfieldlist.conf"
-EFieldParamFile          = "dat/efieldparam.conf"
-BFieldParamFile          = "dat/bfieldparam.conf"
+EFieldListFile           = "dat/efieldlist.dat"
+BFieldListFile           = "dat/bfieldlist.dat"
+EFieldParamFile          = "dat/efieldparam.dat"
+BFieldParamFile          = "dat/bfieldparam.dat"
 particleFile             = "dat/particles.dat"
 popoutFile               = "dat/popout.dat"
 probeFileBase            = "prb/probe"
