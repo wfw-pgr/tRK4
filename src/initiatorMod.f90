@@ -30,6 +30,7 @@ contains
     
     write(6,"(a)"            ) "[initialize__variables]    ========  [initialized variables   ]  ======== "
     write(6,"(a,18x,a,e15.8)") "qm"   ,  " :: ", qm
+    write(6,"(a,18x,a,e15.8)") "ptime",  " :: ", ptime
     write(6,"(a)"            ) "[initialize__variables]    ============================================== "    
     
     return

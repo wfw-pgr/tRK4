@@ -2,13 +2,14 @@ module variablesMod
   implicit none
 
   type field
-     integer                       :: LI, LJ, LK
+     integer                       :: LI, LJ, LK, nRepeat_x, nRepeat_y, nRepeat_z
      character(10)                 :: boundary_x, boundary_y, boundary_z
      character(3)                  :: modulation_type
      double precision              :: dx, dy, dz, dxInv, dyInv, dzInv
      double precision              :: xMin, xMax, yMin, yMax, zMin, zMax
      double precision              :: xshift, yshift, zshift
      double precision              :: modulation, amplitude_factor
+     double precision              :: xLeng, yLeng, zLeng, xLengInv, yLengInv, zLengInv
      double precision, allocatable :: EBf(:,:,:,:)
   end type field
 

@@ -163,8 +163,7 @@ contains
     ! --- [3] fetch EField Data                          --- !
     ! ------------------------------------------------------ !
     do iF=1, nEField
-       write(6,*) yMin, yMax
-       call load__singleFieldFile( eFieldFiles(iF), efields(iF) )
+       call load__singleFieldFile( eFieldFiles(iF), efields(iF), iF )
     enddo
     write(6,*)
     write(6,*)
@@ -173,7 +172,7 @@ contains
     ! --- [4] fetch BField Data                          --- !
     ! ------------------------------------------------------ !
     do iF=1, nBField
-       call load__singleFieldFile( bFieldFiles(iF), bfields(iF) )
+       call load__singleFieldFile( bFieldFiles(iF), bfields(iF), iF )
     enddo
     write(6,*)
     write(6,*)
@@ -185,13 +184,14 @@ contains
   ! ====================================================== !
   ! === load field info                                === !
   ! ====================================================== !
-  subroutine load__singleFieldFile( FieldFile, afield )
+  subroutine load__singleFieldFile( FieldFile, afield, ith )
     use variablesMod
     implicit none
     character(cLen), intent(in)    :: FieldFile
     type(field)    , intent(inout) :: afield
+    integer        , intent(in)    :: ith
     character(cLen)  :: cmt, key
-    integer          :: i, j, k, LIr, LJr, LKr, nCmpr
+    integer          :: i, j, k, LIr, LJr, LKr, nCmpr, iL
     double precision :: xMin_, xMax_, yMin_, yMax_, zMin_, zMax_
 
     !  -- [3-1] EField Data File Name                 --  !
@@ -226,9 +226,13 @@ contains
     !  -- [3-5] field parameters                      --  !
     open (lun,file=trim(EFieldParamFile),status="old")
     read (lun,*) cmt
+    do iL=1, ith-1
+       read(lun,*)
+    enddo
     read (lun,*) key, afield%amplitude_factor, afield%xshift, afield%yshift, &
-         & afield%zshift, afield%modulation_type, afield%boundary_x, &
-         & afield%boundary_y, afield%boundary_z
+         & afield%zshift, afield%modulation_type, &
+         & afield%boundary_x, afield%boundary_y, afield%boundary_z, &
+         & afield%nRepeat_x, afield%nRepeat_y, afield%nRepeat_z
     close(lun)
     
     afield%modulation = 1.d0
@@ -281,6 +285,32 @@ contains
     zMin = min( zMin_, zMin )
     zMax = max( zMax_, zMax )
 
+    if ( flag__axisymmetry ) then
+       afield%xLeng    =  xMax_ - xMin_
+       afield%yLeng    =  0.d0
+       afield%zLeng    =  zMax_ - zMin_
+       afield%xLengInv =  1.d0 / afield%xLeng
+       afield%yLengInv =  0.d0
+       afield%zLengInv =  1.d0 / afield%zLeng
+    else
+       afield%xLeng    =  xMax_ - xMin_
+       afield%yLeng    =  yMax_ - yMin_
+       afield%zLeng    =  zMax_ - zMin_
+       afield%xLengInv =  1.d0 / afield%xLeng
+       afield%yLengInv =  1.d0 / afield%yLeng
+       afield%zLengInv =  1.d0 / afield%zLeng
+    endif
+
+    if ( afield%nRepeat_x.ge.2 ) then
+       afield%xMax = afield%xMin + afield%xLeng * afield%nRepeat_x
+    endif
+    if ( afield%nRepeat_y.ge.2 ) then
+       afield%yMax = afield%yMin + afield%yLeng * afield%nRepeat_y
+    endif
+    if ( afield%nRepeat_z.ge.2 ) then
+       afield%zMax = afield%zMin + afield%zLeng * afield%nRepeat_z
+    endif
+    
     write(6,"(a)")       " ----------------  Field  -------------------- "
     write(6,"(a,i8)"   ) "         LI :: ", afield%LI
     write(6,"(a,i8)"   ) "         LJ :: ", afield%LJ
@@ -297,13 +327,23 @@ contains
     write(6,"(a,f15.8)") "      dxInv :: ", afield%dxInv
     write(6,"(a,f15.8)") "      dyInv :: ", afield%dyInv
     write(6,"(a,f15.8)") "      dzInv :: ", afield%dzInv
+    write(6,"(a,f15.8)") "      xLeng :: ", afield%xLeng
+    write(6,"(a,f15.8)") "      yLeng :: ", afield%yLeng
+    write(6,"(a,f15.8)") "      zLeng :: ", afield%zLeng
+    write(6,"(a,f15.8)") "   xLengInv :: ", afield%xLengInv
+    write(6,"(a,f15.8)") "   yLengInv :: ", afield%yLengInv
+    write(6,"(a,f15.8)") "   zLengInv :: ", afield%zLengInv
+    write(6,"(a,f15.8)") "  amplitude :: ", afield%amplitude_factor
     write(6,"(a,a)"    ) "  modu_type :: ", afield%modulation_type
     write(6,"(a,a)"    ) " boundary_x :: ", afield%boundary_x
     write(6,"(a,a)"    ) " boundary_y :: ", afield%boundary_y
     write(6,"(a,a)"    ) " boundary_z :: ", afield%boundary_z
-    write(6,"(a,f15.8)") "  amplitude :: ", afield%amplitude_factor
+    write(6,"(a,i8)"   ) "  nRepeat_x :: ", afield%nRepeat_x
+    write(6,"(a,i8)"   ) "  nRepeat_y :: ", afield%nRepeat_y
+    write(6,"(a,i8)"   ) "  nRepeat_z :: ", afield%nRepeat_z
     write(6,"(a)")       " --------------------------------------------- "
-
+    write(6,*)
+    
     return
   end subroutine load__singleFieldFile
   

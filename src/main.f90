@@ -94,23 +94,3 @@ program main
   deallocate( pxv )
 
 end program main
-
-
-
-
-! if ( flag__standingWave ) then
-!    call load__swEigenMode
-! endif
-! if ( flag__travellingWave ) then
-!    call load__twEigenMode
-! endif
-! if ( flag__EField ) call load__EFieldFile
-! if ( flag__BField ) call load__BFieldFile
-
-! if ( flag__standingWave ) then
-!    call modulate__swEigenMode
-! endif
-! if ( flag__travellingWave ) then
-!    call modulate__twEigenMode
-! endif
-

@@ -113,8 +113,8 @@ contains
     double precision, intent(in)  :: xp(3)
     double precision, intent(out) :: EBp(6)
     integer                       :: i, j, k, ip, jp, kp, iF
-    double precision              :: amplitude, rposit(3), sfx(-2:2), sfy(-2:2), sfz(-2:2)
-
+    double precision              :: amplitude, rposit(3), xph(3)
+    double precision              :: sfx(-2:2), sfy(-2:2), sfz(-2:2)
 
     ! ------------------------------------------------------ !
     ! --- [1] initialize EBp return variable             --- !
@@ -131,6 +131,15 @@ contains
             & ( ( xp(yp_).ge.efields(iF)%yMin ).and.( xp(yp_).le.efields(iF)%yMax ) ).and. &
             & ( ( xp(zp_).ge.efields(iF)%zMin ).and.( xp(zp_).le.efields(iF)%zMax ) ) ) then
 
+          ! xph(xp_)     = xp(xp_) - efields(iF)%xLeng &
+          !      &         * floor( ( xph(xp_) - efields(iF)%xMin ) * efields(iF)%xLengInv )
+          ! xph(yp_)     = xp(yp_) - efields(iF)%yLeng &
+          !      &         * floor( ( xph(yp_) - efields(iF)%yMin ) * efields(iF)%yLengInv )
+          ! xph(zp_)     = xp(zp_) - efields(iF)%zLeng &
+          !      &         * floor( ( xph(zp_) - efields(iF)%zMin ) * efields(iF)%zLengInv )
+          ! rposit(xp_)  = ( xph(xp_) - efields(iF)%xMin ) * efields(iF)%dxInv
+          ! rposit(yp_)  = ( xph(yp_) - efields(iF)%yMin ) * efields(iF)%dyInv
+          ! rposit(zp_)  = ( xph(zp_) - efields(iF)%zMin ) * efields(iF)%dzInv
           rposit(xp_)  = ( xp(xp_) - efields(iF)%xMin ) * efields(iF)%dxInv
           rposit(yp_)  = ( xp(yp_) - efields(iF)%yMin ) * efields(iF)%dyInv
           rposit(zp_)  = ( xp(zp_) - efields(iF)%zMin ) * efields(iF)%dzInv
@@ -165,9 +174,19 @@ contains
             & ( ( xp(yp_).ge.bfields(iF)%yMin ).and.( xp(yp_).le.bfields(iF)%yMax ) ).and.&
             & ( ( xp(zp_).ge.bfields(iF)%zMin ).and.( xp(zp_).le.bfields(iF)%zMax ) ) ) then
 
-          rposit(xp_)  = ( xp(xp_) - bfields(iF)%xMin ) * bfields(iF)%dxInv
-          rposit(yp_)  = ( xp(yp_) - bfields(iF)%yMin ) * bfields(iF)%dyInv
-          rposit(zp_)  = ( xp(zp_) - bfields(iF)%zMin ) * bfields(iF)%dzInv
+          ! xph(xp_)     = xp(xp_) - bfields(iF)%xLeng &
+          !      &         * floor( ( xph(xp_) - bfields(iF)%xMin ) * bfields(iF)%xLengInv )
+          ! xph(yp_)     = xp(yp_) - bfields(iF)%yLeng &
+          !      &         * floor( ( xph(yp_) - bfields(iF)%yMin ) * bfields(iF)%yLengInv ) 
+          ! xph(zp_)     = xp(zp_) - bfields(iF)%zLeng &
+          !      &         * floor( ( xph(zp_) - bfields(iF)%zMin ) * bfields(iF)%zLengInv )
+          ! rposit(xp_)  = ( xph(xp_) - bfields(iF)%xMin ) * bfields(iF)%dxInv
+          ! rposit(yp_)  = ( xph(yp_) - bfields(iF)%yMin ) * bfields(iF)%dyInv
+          ! rposit(zp_)  = ( xph(zp_) - bfields(iF)%zMin ) * bfields(iF)%dzInv
+          rposit(xp_)  = ( xp(xp_) - efields(iF)%xMin ) * efields(iF)%dxInv
+          rposit(yp_)  = ( xp(yp_) - efields(iF)%yMin ) * efields(iF)%dyInv
+          rposit(zp_)  = ( xp(zp_) - efields(iF)%zMin ) * efields(iF)%dzInv
+
           ip           = max( min( nint( rposit(xp_) ), bfields(iF)%LI-1 ), 0 )
           jp           = max( min( nint( rposit(yp_) ), bfields(iF)%LJ-1 ), 0 )
           kp           = max( min( nint( rposit(zp_) ), bfields(iF)%LK-1 ), 0 )
