@@ -18,14 +18,25 @@ def time_vs_probeData( nums=None, axis=None ):
     vx_, vy_, vz_ =  4,  5,  6
     ex_, ey_, ez_ =  7,  8,  9
     bx_, by_, bz_ = 10, 11, 12
+
+    cnsFile = "dat/particle.conf"
+    import nkUtilities.load__constants as lcn
+    pconst  = lcn.load__constants( inpFile=cnsFile )
     
     # ------------------------------------------------- #
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
     if ( nums is None ):
-        print( "[trajectory__tx] please input particle number : ( e.g. :: 1 2 3 ) >>> ", end="" )
+        print( "[trajectory__tx] please input particle number : ( e.g. :: 1 2 3, 1-4, [empty::all] ) >>> ", end="" )
         nums = input()
-        nums = [ int(num) for num in nums.split() ]
+        if   ( len(nums) == 0 ):
+            nums    = list( range( 1, pconst["npt"]+1 ) )
+        elif ( len( nums.split("-") ) == 2 ):
+            imin = int( ( nums.split("-")[0] ).strip() )
+            imax = int( ( nums.split("-")[0] ).strip() )
+            nums = list( range( imin, imax+1 ) ) 
+        else:
+            nums = [ int(num) for num in nums.split() ]
 
     if ( axis is None ):
         print( "[trajectory__tx] please input axis ( x/y/z )  : ( e.g. :: x     ) >>> ", end="" )
@@ -103,7 +114,6 @@ def time_vs_probeData( nums=None, axis=None ):
     # ------------------------------------------------- #
     fig    = pl1.plot1D( config=config, pngFile=pngFile )
     for ik,num in enumerate( nums ):
-        # inpFile = "trk/track{0:06}.dat".format( num )
         inpFile = "prb/probe{0:06}.dat".format( num )
         Data    = lpf.load__pointFile( inpFile=inpFile, returnType="point" )
         xAxis   = Data[:,t_]
@@ -118,11 +128,31 @@ def time_vs_probeData( nums=None, axis=None ):
 # ========================================================= #
 
 if ( __name__=="__main__" ):
-    import nkUtilities.genArgs as gar
-    args = gar.genArgs()
-    nums = args["array"]
-    axis = args["key"]
-    
+
+    # ------------------------------------------------- #
+    # --- [1] preparation                           --- #
+    # ------------------------------------------------- #
+    import nkUtilities.genArgs         as gar
+    import nkUtilities.load__constants as lcn
+    cnsFile = "dat/particle.conf"
+    pconst  = lcn.load__constants( inpFile=cnsFile )
+    args    = gar.genArgs()
+
+    # ------------------------------------------------- #
+    # --- [2] mode selection                        --- #
+    # ------------------------------------------------- #
+    print( "[time_vs_probeData.py] default :: plot all data ?? ( y/n ) >>> ", end="" )
+    yorn = input()
+    if ( ( yorn == "y" ) or ( len(yorn)==0 ) ):
+        nums    = list( range( 1, pconst["npt"]+1 ) )
+        axis    = "all"
+    else:
+        nums = args["array"]
+        axis = args["key"]
+
+    # ------------------------------------------------- #
+    # --- [3] plot                                  --- #
+    # ------------------------------------------------- #
     if ( axis == "all" ):
         for ax in ["x","y","z","vx","vy","vz","ex","ey","ez","bx","by","bz"]:
             time_vs_probeData( nums=nums, axis=ax )

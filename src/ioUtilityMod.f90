@@ -319,6 +319,9 @@ contains
     write(6,"(a,f15.8)") "       yMax :: ", afield%yMax
     write(6,"(a,f15.8)") "       zMin :: ", afield%zMin
     write(6,"(a,f15.8)") "       zMax :: ", afield%zMax
+    write(6,"(a,f15.8)") "     xshift :: ", afield%xshift
+    write(6,"(a,f15.8)") "     yshift :: ", afield%yshift
+    write(6,"(a,f15.8)") "     zshift :: ", afield%zshift
     write(6,"(a,f15.8)") "         dx :: ", afield%dx
     write(6,"(a,f15.8)") "         dy :: ", afield%dy
     write(6,"(a,f15.8)") "         dz :: ", afield%dz

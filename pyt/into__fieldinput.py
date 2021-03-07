@@ -63,7 +63,7 @@ def into__fieldinput():
     with open( const["EFieldParamFile"], "w" ) as f:
         f.write( efieldparam )
     print( "[into__fieldlist.py]  outFile :: {0} ".format( const["EFieldParamFile"] ) )
-    with open( const["EFieldParamFile"], "w" ) as f:
+    with open( const["BFieldParamFile"], "w" ) as f:
         f.write( bfieldparam )
     print( "[into__fieldlist.py]  outFile :: {0} ".format( const["BFieldParamFile"] ) )
     print()

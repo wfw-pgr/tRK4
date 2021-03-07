@@ -19,6 +19,8 @@ contains
     ! --- [2] display variables                          --- !
     ! ------------------------------------------------------ !
     write(6,"(a)"            ) "[initialize__variables]    ========  [initialized variables   ]  ======== "
+    write(6,"(a,18x,a,e15.8)") "qe   ",  " :: ", qe
+    write(6,"(a,18x,a,e15.8)") "mp   ",  " :: ", mp
     write(6,"(a,18x,a,e15.8)") "qm   ",  " :: ", qm
     write(6,"(a,18x,a,e15.8)") "ptime",  " :: ", ptime
     write(6,"(a)"            ) "[initialize__variables]    ============================================== "    

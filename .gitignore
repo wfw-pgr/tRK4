@@ -1,5 +1,7 @@
 png/*.png
 png/*.vts
+bpm/*.dat
+prb/*.dat
 src/*.mod
 src/*.o
-prb/*.dat
+sav/*
