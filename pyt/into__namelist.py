@@ -15,7 +15,7 @@ def into__namelist( inpFile="dat/parameter.conf", outFile="dat/input.lst" ):
     skipkeys = [ "cv", "tw_cosEigenFile", "tw_sinEigenFile", \
                  "tw_timeStart", "tw_nCycle", "tw_nTime", "tw_frequency", "tw_phase", \
                  "P_input", "Lcavity", "beta_wave", "Ustored", "Qvalue", "rsh", "t_transit_time",\
-    ]
+                 "strength_bfield", "xMin_bfield", "xMax_bfield", "yMin_bfield", "yMax_bfield", "zMin_bfield", "zMax_bfield", "LI_bfield", "LJ_bfield", "LK_bfield" ]
     print( keys )
 
     # ------------------------------------------------- #

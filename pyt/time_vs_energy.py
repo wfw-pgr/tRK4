@@ -19,7 +19,11 @@ def time_vs_energy( nums=None ):
     vx_, vy_, vz_ =  4,  5,  6
     ex_, ey_, ez_ =  7,  8,  9
     bx_, by_, bz_ = 10, 11, 12
-    
+
+    cnsFile = "dat/particle.conf"
+    import nkUtilities.load__constants as lcn
+    pconst  = lcn.load__constants( inpFile=cnsFile )
+
     # ------------------------------------------------- #
     # --- [1] Arguments                             --- #
     # ------------------------------------------------- #
@@ -27,9 +31,10 @@ def time_vs_energy( nums=None ):
         print( "[time_vs_energy] please input particle number : ( def. :: all ) >>> ", end="" )
         nums = input()
         if ( len( nums ) == 0 ):
-            import glob
-            files = glob.glob( "prb/probe*.dat" )
-            nums  = [ int(num+1) for num in range( len(files) ) ]
+            nums    = list( range( 1, pconst["npt"]+1 ) )
+            # import glob
+            # files = glob.glob( "prb/probe*.dat" )
+            # nums  = [ int(num+1) for num in range( len(files) ) ]
         else:
             nums = [ int(num) for num in nums.split() ]
         

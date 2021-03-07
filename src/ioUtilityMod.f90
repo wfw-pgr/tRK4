@@ -150,7 +150,7 @@ contains
     ! --- [3] fetch EField Data                          --- !
     ! ------------------------------------------------------ !
     do iF=1, nEField
-       call load__singleFieldFile( eFieldFiles(iF), efields(iF), iF )
+       call load__singleFieldFile( eFieldFiles(iF), efields(iF), iF, "E" )
     enddo
     write(6,*)
     write(6,*)
@@ -159,7 +159,7 @@ contains
     ! --- [4] fetch BField Data                          --- !
     ! ------------------------------------------------------ !
     do iF=1, nBField
-       call load__singleFieldFile( bFieldFiles(iF), bfields(iF), iF )
+       call load__singleFieldFile( bFieldFiles(iF), bfields(iF), iF, "B" )
     enddo
     write(6,*)
     write(6,*)
@@ -171,10 +171,11 @@ contains
   ! ====================================================== !
   ! === load field info                                === !
   ! ====================================================== !
-  subroutine load__singleFieldFile( FieldFile, afield, ith )
+  subroutine load__singleFieldFile( FieldFile, afield, ith, mode )
     use variablesMod
     implicit none
     character(cLen), intent(in)    :: FieldFile
+    character(1)   , intent(in)    :: mode
     type(field)    , intent(inout) :: afield
     integer        , intent(in)    :: ith
     character(cLen)                :: cmt, key
@@ -213,7 +214,13 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] Load Field Parameters                      --- !
     ! ------------------------------------------------------ !
-    open (lun,file=trim(EFieldParamFile),status="old")
+    if      ( mode.eq."E" ) then
+       open (lun,file=trim(EFieldParamFile),status="old")
+    else if ( mode.eq."B" ) then
+       open (lun,file=trim(BFieldParamFile),status="old")
+    else
+       stop "illegal mode @ load__singleFieldFile"
+    endif
     read (lun,*) cmt
     do iL=1, ith-1
        read(lun,*)

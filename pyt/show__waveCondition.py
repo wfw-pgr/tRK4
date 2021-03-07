@@ -18,8 +18,8 @@ def show__waveCondition():
     # --- [2] calculate amplitude                   --- #
     # ------------------------------------------------- #
 
-    omega            = 2.0*np.pi*const["freq"]
-    tau              = 1.0/      const["freq"]
+    omega            = 2.0*np.pi*const["tw_frequency"]
+    tau              = 1.0/      const["tw_frequency"]
     vphT             = const["beta_wave"] * const["cv"] * tau
     P_loss           = omega*const["Ustored"] / const["Qvalue"]
     amplitude_factor = np.sqrt( const["P_input"] / P_loss )
@@ -30,7 +30,7 @@ def show__waveCondition():
     # ------------------------------------------------- #
 
     print()
-    print( "[calculate__power_of_wave] frequency     :: {0}".format( const["freq"]      ) )
+    print( "[calculate__power_of_wave] frequency     :: {0}".format( const["tw_frequency"] ) )
     print( "[calculate__power_of_wave]     omega     :: {0}".format( omega              ) )
     print( "[calculate__power_of_wave]         T     :: {0}".format( tau                ) )
     print( "[calculate__power_of_wave]   Lcavity     :: {0}".format( const["Lcavity"]   ) )

@@ -1,3 +1,8 @@
 # key Amplitude Frequency Phase xyzshift modulation_type boundary_xyz nRepeat_xyz
-bfield_regular_opened.dat +5.0 2.856e9 0.0 0.0 0.0 0.0 cos Neumann Neumann Neumann 1 1 16
-bfield_regular_closed.dat +5.0 2.856e9 0.0 0.0 0.0 0.0 sin Neumann Neumann Neumann 1 1 16
+bfield_buncher1_opened.dat +5.292813 2.856e9 0.0 0.0 0.0 0.0 cos Neumann Neumann Neumann 1 1 1
+bfield_buncher1_closed.dat +4.937905 2.856e9 0.0 0.0 0.0 0.0 sin Neumann Neumann Neumann 1 1 1
+bfield_buncher2_opened.dat +8.632319 2.856e9 0.0 0.0 0.0 0.067179 cos Neumann Neumann Neumann 1 1 2
+bfield_buncher2_closed.dat +8.022602 2.856e9 0.0 0.0 0.0 0.067179 sin Neumann Neumann Neumann 1 1 2
+bfield_regular_opened.dat +9.505209 2.856e9 0.0 0.0 0.0 0.25611900 cos Neumann Neumann Neumann 1 1 40
+bfield_regular_closed.dat +8.775930 2.856e9 0.0 0.0 0.0 0.25611900 sin Neumann Neumann Neumann 1 1 40
+bfield_solenoid.dat +0.01 2.856e9 0.0 0.0 0.0 0.0 off Neumann Neumann Neumann 1 1 1
