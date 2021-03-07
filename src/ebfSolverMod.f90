@@ -9,7 +9,7 @@ contains
     implicit none
     integer                     :: iF
     double precision            :: phi
-    double precision, parameter :: twopi = 16.d0 * atan(1.d0)
+    double precision, parameter :: twopi = 8.d0 * atan(1.d0)
 
     ! ------------------------------------------------------ !
     ! --- [1] modulate efield                            --- !

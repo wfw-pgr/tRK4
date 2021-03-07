@@ -93,7 +93,6 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] calculate L.H.S.                           --- !
     ! ------------------------------------------------------ !
-    
     gammaInv     = sqrt( 1.d0 * ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
     rhs_vp(vxh_) = qm * ( EBp(ex_) + gammaInv*( vp(vyh_)*EBp(bz_) - vp(vzh_)*EBp(by_) ) )
     rhs_vp(vyh_) = qm * ( EBp(ey_) + gammaInv*( vp(vzh_)*EBp(bx_) - vp(vxh_)*EBp(bz_) ) )
@@ -160,6 +159,7 @@ contains
           enddo
           
        endif
+
     enddo
 
     ! ------------------------------------------------------ !
@@ -200,6 +200,7 @@ contains
           enddo
 
        endif
+              
     enddo
 
     return

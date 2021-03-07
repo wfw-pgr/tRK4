@@ -5,7 +5,6 @@ import numpy as np
 # ===  collect__particles.py                            === #
 # ========================================================= #
 
-
 def collect__particles( target_time=None ):
 
     # ------------------------------------------------- #
@@ -69,14 +68,14 @@ def collect__particles( target_time=None ):
             p1, p2 = ( t2-target_time ) / ( t2-t1 ), ( target_time-t1 ) / ( t2-t1 )
             ret[ip,:]    = p1*Data[idx,:] + p2*Data[idx+1,:]
 
-
+            
     # ------------------------------------------------- #
     # --- [3] save in file                          --- #
     # ------------------------------------------------- #
     outFile   = "prb/collected.dat"
     with open( outFile, "w" ) as f:
         np.savetxt( f, ret )
-    return()
+    return( ret )
 
 
 

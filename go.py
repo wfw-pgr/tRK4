@@ -45,6 +45,16 @@ def go():
     print( cmd )
     subprocess.call( cmd.split() )
     os.chdir( "../" )
+    print()
+
+    # ------------------------------------------------- #
+    # --- [5] ./main is ready                       --- #
+    # ------------------------------------------------- #
+    print()
+    print( "[go.py] Ready to start.... " )
+    print( "[go.py]     ==> ./main "     )
+    print()
+
     
     return()
 
