@@ -84,12 +84,3 @@ program main
   deallocate( pxv )
 
 end program main
-
-
-
-
-! if ( flag__saveParticle ) call save__particles  ( "initi" )
-! if ( ( flag__saveParticle ).and.( ptime.gt.t_nextSave  ) ) then
-!    call save__particles( "store" )
-! endif
-! if ( flag__saveParticle ) call save__particles  ( "final" )

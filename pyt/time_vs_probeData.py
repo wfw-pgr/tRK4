@@ -51,11 +51,31 @@ def time_vs_probeData( nums=None, axis=None ):
     config  = lcf.load__config()
 
     # ------------------------------------------------- #
-    # --- [2] axis settings                         --- #
+    # --- [2] config Settings                       --- #
+    # ------------------------------------------------- #
+    cfs.configSettings( configType="plot1D_def", config=config )
+    config["xTitle"]         = "Time (s)"
+    config["yTitle"]         = yTitle
+    config["plt_xAutoRange"] = True
+    config["plt_yAutoRange"] = True
+    config["plt_xRange"]     = [-5.0,+5.0]
+    config["plt_yRange"]     = [-5.0,+5.0]
+    config["plt_linewidth"]  = 1.0
+    config["xMajor_Nticks"]  = 5
+    config["yMajor_Nticks"]  = 5
+    config["plt_marker"]     = None
+    
+    import nkUtilities.generate__colors as col
+    colors = col.generate__colors( nColors=len(nums) )
+
+    # ------------------------------------------------- #
+    # --- [3] axis settings                         --- #
     # ------------------------------------------------- #
     if   ( axis.lower() == "x" ):
         p_     = x_
         yTitle = "x (m)"
+        config["plt_xAutoRange"] = False
+        config["plt_xRange"]     = [0.0,0.020]
     elif ( axis.lower() == "y" ):
         p_     = y_
         yTitle = "y (m)"
@@ -89,25 +109,6 @@ def time_vs_probeData( nums=None, axis=None ):
     elif ( axis.lower() == "bz" ):
         p_     = bz_
         yTitle = "bz (T)"
-
-    # ------------------------------------------------- #
-    # --- [3] config Settings                       --- #
-    # ------------------------------------------------- #
-    cfs.configSettings( configType="plot1D_def", config=config )
-    config["xTitle"]         = "Time (s)"
-    config["yTitle"]         = yTitle
-    config["plt_xAutoRange"] = True
-    config["plt_yAutoRange"] = True
-    config["plt_xRange"]     = [-5.0,+5.0]
-    config["plt_yRange"]     = [-5.0,+5.0]
-    config["plt_linewidth"]  = 1.0
-    config["xMajor_Nticks"]  = 5
-    config["yMajor_Nticks"]  = 5
-    config["plt_marker"]     = None
-    
-    import nkUtilities.generate__colors as col
-    colors = col.generate__colors( nColors=len(nums) )
-
     
     # ------------------------------------------------- #
     # --- [4] plot Figure                           --- #

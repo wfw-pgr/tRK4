@@ -140,17 +140,17 @@ contains
     ! --- [1] check simulation condition                 --- !
     ! ------------------------------------------------------ !
     do iF=1, nEField
-       if ( trim(efields(iF)%boundary_y).ne."Neumann" ) then
-          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
-          write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
-          efields(iF)%boundary_y = "Neumann"
+       if ( trim(efields(iF)%boundary_x).ne."axisymm" ) then
+          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary_x  !=  axisymm  [CAUTION]"
+          ! write(6,"(a)") "[initialize__axisymmMode]      change into axisymm..... "
+          ! efields(iF)%boundary_x = "axisymm"
        endif
     enddo
     do iF=1, nBField
-       if ( trim(bfields(iF)%boundary_y).ne."Neumann" ) then
-          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary__y  !=  Neumann  [CAUTION]"
-          write(6,"(a)") "[initialize__axisymmMode]      change into Neumann..... "
-          bfields(iF)%boundary_y = "Neumann"
+       if ( trim(bfields(iF)%boundary_x).ne."axisymm" ) then
+          write(6,"(a)") "[initialize__axisymmMode]  FieldBoundary_x  !=  axisymm  [CAUTION]"
+          ! write(6,"(a)") "[initialize__axisymmMode]      change into axisymm..... "
+          ! bfields(iF)%boundary_x = "axisymm"
        endif
     enddo
     ! ------------------------------------------------------ !

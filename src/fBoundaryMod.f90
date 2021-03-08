@@ -20,6 +20,9 @@ contains
        else if ( trim( efields(iF)%boundary_x ).eq."periodic" ) then
           call fBoundary__Periodic( efields(iF)%EBf, "x", &
                & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_x ).eq."axisymm" ) then
+          call fBoundary__axisymm ( efields(iF)%EBf, "x", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
        end if
     enddo
     do iF=1, nBfield
@@ -28,6 +31,9 @@ contains
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        else if ( trim( bfields(iF)%boundary_x ).eq."periodic" ) then
           call fBoundary__Periodic( bfields(iF)%EBf, "x", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_x ).eq."axisymm" ) then
+          call fBoundary__axisymm ( bfields(iF)%EBf, "x", &
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        end if
     enddo
@@ -42,6 +48,9 @@ contains
        else if ( trim( efields(iF)%boundary_y ).eq."periodic" ) then
           call fBoundary__Periodic( efields(iF)%EBf, "y", &
                & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_y ).eq."axisymm" ) then
+          call fBoundary__axisymm ( efields(iF)%EBf, "y", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
        end if
     enddo
     do iF=1, nBfield
@@ -50,6 +59,9 @@ contains
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        else if ( trim( bfields(iF)%boundary_y ).eq."periodic" ) then
           call fBoundary__Periodic( bfields(iF)%EBf, "y", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_y ).eq."axisymm" ) then
+          call fBoundary__axisymm ( bfields(iF)%EBf, "y", &
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        end if
     enddo
@@ -64,6 +76,9 @@ contains
        else if ( trim( efields(iF)%boundary_z ).eq."periodic" ) then
           call fBoundary__Periodic( efields(iF)%EBf, "z", &
                & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
+       else if ( trim( efields(iF)%boundary_z ).eq."axisymm" ) then
+          call fBoundary__axisymm ( efields(iF)%EBf, "z", &
+               & efields(iF)%LI, efields(iF)%LJ, efields(iF)%LK )
        end if
     enddo
     do iF=1, nBfield
@@ -72,6 +87,9 @@ contains
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        else if ( trim( bfields(iF)%boundary_z ).eq."periodic" ) then
           call fBoundary__Periodic( bfields(iF)%EBf, "z", &
+               & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
+       else if ( trim( bfields(iF)%boundary_z ).eq."axisymm" ) then
+          call fBoundary__axisymm ( bfields(iF)%EBf, "z", &
                & bfields(iF)%LI, bfields(iF)%LJ, bfields(iF)%LK )
        end if
     enddo
@@ -171,6 +189,58 @@ contains
     
     return
   end subroutine fBoundary__periodic
+
+
+  ! ====================================================== !
+  ! === Field Boundary :: axisymm                      === !
+  ! ====================================================== !
+  subroutine fBoundary__axisymm( EBh, boundary, LIh, LJh, LKh )
+    use variablesMod
+    implicit none
+    integer         , intent(in)    :: LIh, LJh, LKh
+    character(1)    , intent(in)    :: boundary
+    double precision, intent(inout) :: EBh(6,-2:LIh+3,-2:LJh+3,-2:LKh+3)
+
+    if ( boundary.eq."x" ) then
+       ! -- xMin side ( r=0 intrinsic ) -- !
+       EBh(fx_,  0,:,:) = - EBh(fx_,2,:,:)
+       EBh(fx_, -1,:,:) = - EBh(fx_,3,:,:)
+       EBh(fx_, -2,:,:) = - EBh(fx_,4,:,:)
+       EBh(fy_,  0,:,:) = - EBh(fy_,2,:,:)
+       EBh(fy_, -1,:,:) = - EBh(fy_,3,:,:)
+       EBh(fy_, -2,:,:) = - EBh(fy_,4,:,:)
+       EBh(fz_,  0,:,:) = + EBh(fz_,2,:,:)
+       EBh(fz_, -1,:,:) = + EBh(fz_,3,:,:)
+       EBh(fz_, -2,:,:) = + EBh(fz_,4,:,:)
+       ! -- xMax side -- !
+       EBh(:,LIh+1,:,:) =   EBh(:,LIh,:,:)
+       EBh(:,LIh+2,:,:) =   EBh(:,LIh,:,:)
+       EBh(:,LIh+3,:,:) =   EBh(:,LIh,:,:)
+    endif
+
+    if ( boundary.eq."y" ) then
+       ! -- yMin side ( r=0 intrinsic ) -- !
+       EBh(fx_,:,  0,:) = - EBh(fx_,:,2,:)
+       EBh(fx_,:, -1,:) = - EBh(fx_,:,3,:)
+       EBh(fx_,:, -2,:) = - EBh(fx_,:,4,:)
+       EBh(fy_,:,  0,:) = - EBh(fy_,:,2,:)
+       EBh(fy_,:, -1,:) = - EBh(fy_,:,3,:)
+       EBh(fy_,:, -2,:) = - EBh(fy_,:,4,:)
+       EBh(fz_,:,  0,:) = + EBh(fz_,:,2,:)
+       EBh(fz_,:, -1,:) = + EBh(fz_,:,3,:)
+       EBh(fz_,:, -2,:) = + EBh(fz_,:,4,:)
+       ! -- yMax side ( Neumann Boundary ) -- !
+       EBh(:,:,LJh+1,:) =   EBh(:,:,LJh,:)
+       EBh(:,:,LJh+2,:) =   EBh(:,:,LJh,:)
+       EBh(:,:,LJh+3,:) =   EBh(:,:,LJh,:)
+    endif
+
+    if ( boundary.eq."z" ) then
+       write(6,*) "[fBoundary__axisymm] Axisymmetric boundary for z is not implemented... [stop]"
+       stop
+    endif
+    return
+  end subroutine fBoundary__axisymm
 
   
 end module fBoundaryMod

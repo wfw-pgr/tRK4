@@ -66,10 +66,10 @@ contains
     double precision             :: gammaInv
     integer         , parameter  :: vxh_=1, vyh_=2, vzh_=3
     
-    gammaInv     = 1.d0 / sqrt( 1.d0 + ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
-    rhs_xp(vxh_) = vp(vxh_) * gammaInv
-    rhs_xp(vyh_) = vp(vyh_) * gammaInv
-    rhs_xp(vzh_) = vp(vzh_) * gammaInv
+    gammaInv    = 1.d0 / sqrt( 1.d0 + ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
+    rhs_xp(xp_) = vp(vxh_) * gammaInv
+    rhs_xp(yp_) = vp(vyh_) * gammaInv
+    rhs_xp(zp_) = vp(vzh_) * gammaInv
     return
   end function rhs_xp
     
@@ -93,7 +93,7 @@ contains
     ! ------------------------------------------------------ !
     ! --- [2] calculate L.H.S.                           --- !
     ! ------------------------------------------------------ !
-    gammaInv     = sqrt( 1.d0 * ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
+    gammaInv     = 1.d0 / sqrt( 1.d0 + ( vp(vxh_)**2 + vp(vyh_)**2 + vp(vzh_)**2 )*cvSqInv )
     rhs_vp(vxh_) = qm * ( EBp(ex_) + gammaInv*( vp(vyh_)*EBp(bz_) - vp(vzh_)*EBp(by_) ) )
     rhs_vp(vyh_) = qm * ( EBp(ey_) + gammaInv*( vp(vzh_)*EBp(bx_) - vp(vxh_)*EBp(bz_) ) )
     rhs_vp(vzh_) = qm * ( EBp(ez_) + gammaInv*( vp(vxh_)*EBp(by_) - vp(vyh_)*EBp(bx_) ) )
@@ -251,7 +251,7 @@ contains
     use variablesMod
     implicit none
     integer                     :: ipt
-    double precision            :: gamma
+    double precision            :: gammaInv
 
     ! ------------------------------------------------------ !
     ! --- [0] check velocity flag                        --- !
@@ -266,10 +266,11 @@ contains
     ! --- [1] convert velocity into relativistic         --- !
     ! ------------------------------------------------------ !
     do ipt=1, npt
-       gamma = sqrt( 1.d0 + cvSqInv*( pxv(vx_,ipt)**2 + pxv(vy_,ipt)**2 + pxv(vz_,ipt)**2 ) )
-       pxv(vx_,ipt) = pxv(vx_,ipt) / gamma
-       pxv(vy_,ipt) = pxv(vy_,ipt) / gamma
-       pxv(vz_,ipt) = pxv(vz_,ipt) / gamma
+       gammaInv     = 1.d0 / sqrt( 1.d0 + cvSqInv &
+            &         * ( pxv(vx_,ipt)**2 + pxv(vy_,ipt)**2 + pxv(vz_,ipt)**2 ) )
+       pxv(vx_,ipt) = pxv(vx_,ipt) * gammaInv
+       pxv(vy_,ipt) = pxv(vy_,ipt) * gammaInv
+       pxv(vz_,ipt) = pxv(vz_,ipt) * gammaInv
     enddo
     ! ------------------------------------------------------ !
     ! --- [2] switch relativistic flag                   --- !
