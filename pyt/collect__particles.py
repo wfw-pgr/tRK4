@@ -193,8 +193,8 @@ def plot__particle_statistic():
 
 if ( __name__=="__main__" ):
 
-    # mode = "single"
-    mode = "successive"
+    mode = "single"
+    # mode = "successive"
     
     # ------------------------------------------------- #
     # --- [1] select time ver.                      --- #
