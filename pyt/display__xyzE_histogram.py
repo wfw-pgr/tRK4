@@ -16,9 +16,11 @@ def display__xyzE_histogram():
     range_z    = None
     range_e    = None
     
-    x_ , y_ , z_  = 1, 2, 3
-    vx_, vy_, vz_ = 4, 5, 6
+    # x_ , y_ , z_  = 1, 2, 3
+    # vx_, vy_, vz_ = 4, 5, 6
     MeV           = 1.e+6
+    x_ , y_ , z_  = 0, 1, 2
+    vx_, vy_, vz_ = 3, 4, 5
 
     # ------------------------------------------------- #
     # --- [1] load config & data                    --- #
@@ -47,7 +49,7 @@ def display__xyzE_histogram():
     bound_y        = 0.5*( bound_y[:1] + bound_y[1:] )
     bound_z        = 0.5*( bound_z[:1] + bound_z[1:] )
     bound_e        = 0.5*( bound_e[:1] + bound_e[1:] )
-
+    
     # ------------------------------------------------- #
     # --- [3] ploting                               --- #
     # ------------------------------------------------- #
@@ -56,22 +58,22 @@ def display__xyzE_histogram():
     config     = lcf.load__config()
     #  -- [3-2]  xAxis                              --  #
     fig = pl1.plot1D( pngFile=pngFile.format( "x" ), config=config )
-    fig.add__plot( xAxis=bound_x, yAxis=hist_x )
+    fig.add__bar( xAxis=bound_x, yAxis=hist_x, width=0.6 )
     fig.set__axis()
     fig.save__figure()
     #  -- [3-3]  yAxis                              --  #
     fig = pl1.plot1D( pngFile=pngFile.format( "y" ), config=config )
-    fig.add__plot( xAxis=bound_y, yAxis=hist_y )
+    fig.add__bar( xAxis=bound_y, yAxis=hist_y, width=0.6 )
     fig.set__axis()
     fig.save__figure()
     #  -- [3-4]  zAxis                              --  #
     fig = pl1.plot1D( pngFile=pngFile.format( "z" ), config=config )
-    fig.add__plot( xAxis=bound_z, yAxis=hist_z )
+    fig.add__bar( xAxis=bound_z, yAxis=hist_z, width=0.6 )
     fig.set__axis()
     fig.save__figure()
     #  -- [3-5]  Energy                             --  #
     fig = pl1.plot1D( pngFile=pngFile.format( "e" ), config=config )
-    fig.add__plot( xAxis=bound_e, yAxis=hist_e )
+    fig.add__bar( xAxis=bound_e, yAxis=hist_e, width=0.6 )
     fig.set__axis()
     fig.save__figure()
     
