@@ -1,3 +1,6 @@
+import sys, subrprocess
+import numpy as np
+
 # ========================================================= #
 # ===  plot particle statistic                          === #
 # ========================================================= #
@@ -27,7 +30,7 @@ def plot__particle_statistic():
     vz     = Data[:,vz_]
     beta   = np.sqrt( vx**2 + vy**2 + vz**2 ) / const["cv"]
     gamma  = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
-    energy = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / const["qe"] / MeV
+    energy = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / np.abs( const["qe"] ) / MeV
 
 
     # ------------------------------------------------- #

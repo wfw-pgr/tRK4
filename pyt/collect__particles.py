@@ -77,7 +77,7 @@ def collect__particles( target=None, pos=None ):
     # ------------------------------------------------- #
     outFile   = "prb/collected.dat"
     import nkUtilities.save__pointFile as spf
-    spf.save__pointFile( outFile=outFile, Data=Data )
+    spf.save__pointFile( outFile=outFile, Data=ret )
     return( ret )
 
 

@@ -10,73 +10,51 @@ import nkUtilities.plot1D       as pl1
 
 def display__xyzE_histogram():
 
-    bins       = 100
-    range_x    = None
-    range_y    = None
-    range_z    = None
-    range_e    = None
+    bins_x, bins_y, bins_z, bins_e     = 100, 100, 100, 100
+    range_x, range_y, range_z, range_e = None, None, None, None
     
-    # x_ , y_ , z_  = 1, 2, 3
-    # vx_, vy_, vz_ = 4, 5, 6
+    pngFile       = "png/histogram_{0}.png"    
     MeV           = 1.e+6
-    x_ , y_ , z_  = 0, 1, 2
-    vx_, vy_, vz_ = 3, 4, 5
+    x_ , y_ , z_  = 1, 2, 3
+    vx_, vy_, vz_ = 4, 5, 6
 
     # ------------------------------------------------- #
     # --- [1] load config & data                    --- #
     # ------------------------------------------------- #
-    #  -- [2-1]  load config                         -- #
+    #  -- [1-1]  load config                         -- #
     cnsFile = "dat/parameter.conf"
     import nkUtilities.load__constants as lcn
-    const = lcn.load__constants( inpFile=cnsFile )
+    const   = lcn.load__constants( inpFile=cnsFile )
+    config  = lcf.load__config()
 
-    #  -- [2-2]  load data & energy calculation      -- #
+    #  -- [1-2]  load data & energy calculation      -- #
     inpFile = "prb/collected.dat"
     with open( inpFile, "r" ) as f:
         Data = np.loadtxt( f )
+
+    #  -- [1-3] energy calculation                   -- #
     beta   = np.sqrt( Data[:,vx_]**2 + Data[:,vy_]**2 + Data[:,vz_]**2 ) / const["cv"]
     gamma  = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
     energy = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / np.abs( const["qe"] ) / MeV
 
     # ------------------------------------------------- #
-    # --- [2] calculation of histgram               --- #
+    # --- [2] draw histogram                        --- #
     # ------------------------------------------------- #
-    hist_x,bound_x = np.histogram(   Data[:,x_], bins=bins, range=range_x )
-    hist_y,bound_y = np.histogram(   Data[:,y_], bins=bins, range=range_y )
-    hist_z,bound_z = np.histogram(   Data[:,z_], bins=bins, range=range_z )
-    hist_e,bound_e = np.histogram( energy      , bins=bins, range=range_e )
-    bound_x        = 0.5*( bound_x[:1] + bound_x[1:] )
-    bound_y        = 0.5*( bound_y[:1] + bound_y[1:] )
-    bound_z        = 0.5*( bound_z[:1] + bound_z[1:] )
-    bound_e        = 0.5*( bound_e[:1] + bound_e[1:] )
-    
-    # ------------------------------------------------- #
-    # --- [3] ploting                               --- #
-    # ------------------------------------------------- #
-    #  -- [3-1]  settings                           --  #
-    pngFile    = "png/histogram_{0}.png"
-    config     = lcf.load__config()
-    #  -- [3-2]  xAxis                              --  #
-    fig = pl1.plot1D( pngFile=pngFile.format( "x" ), config=config )
-    fig.add__bar( xAxis=bound_x, yAxis=hist_x, width=0.6 )
-    fig.set__axis()
-    fig.save__figure()
-    #  -- [3-3]  yAxis                              --  #
-    fig = pl1.plot1D( pngFile=pngFile.format( "y" ), config=config )
-    fig.add__bar( xAxis=bound_y, yAxis=hist_y, width=0.6 )
-    fig.set__axis()
-    fig.save__figure()
-    #  -- [3-4]  zAxis                              --  #
-    fig = pl1.plot1D( pngFile=pngFile.format( "z" ), config=config )
-    fig.add__bar( xAxis=bound_z, yAxis=hist_z, width=0.6 )
-    fig.set__axis()
-    fig.save__figure()
-    #  -- [3-5]  Energy                             --  #
-    fig = pl1.plot1D( pngFile=pngFile.format( "e" ), config=config )
-    fig.add__bar( xAxis=bound_e, yAxis=hist_e, width=0.6 )
-    fig.set__axis()
-    fig.save__figure()
-    
+    #  -- [2-1] Number of particles                 --  #
+    config["yTitle"] = "Number of particles"
+
+    #  -- [2-2] Number of particles                 --  #
+    import nkUtilities.make__histogram as hst
+    config["xTitle"] = "X (m)"
+    hist_x, bound_x = hst.make__histogram( Data=Data[:,x_], bins=bins_x, range=range_x, \
+                                           config=config, pngFile=pngFile.format( "x" ) )
+    config["xTitle"] = "Y (m)"
+    hist_y, bound_y = hst.make__histogram( Data=Data[:,y_], bins=bins_y, range=range_y, \
+                                           config=config, pngFile=pngFile.format( "y" ) )
+    config["xTitle"] = "Z (m)"
+    hist_z, bound_z = hst.make__histogram( Data=Data[:,z_], bins=bins_z, range=range_z, \
+                                           config=config, pngFile=pngFile.format( "z" ) )
+
 
 # ========================================================= #
 # ===   実行部                                          === #
