@@ -12,6 +12,8 @@ import matplotlib.cm               as cm
 # ===  display__beamline                                === #
 # ========================================================= #
 def display__beamline( color="blue", colormode="energy", eRange=None ):
+
+    eRange = [15e6,30e6]
     
     # ------------------------------------------------- #
     # --- [1] Preparation                           --- #
@@ -26,7 +28,7 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
     inpFile     = "prb/probe{0:06}.dat"
 
     #  -- [1-2] load__selected                      --  #
-    import select__probeFile as spf
+    import select__particles as spf
     FileList    = spf.load__selected()
     nFile       = ( FileList.shape[0] )
 
@@ -51,7 +53,8 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
 
     elif ( colormode == "energy" ):
 
-        energy_list=[]
+        energy_list = []
+        colors      = []
         for ik,num in enumerate( FileList ):
             #  -- load     --  #
             Data   = lpf.load__pointFile( inpFile=inpFile.format( num ) )
@@ -63,9 +66,15 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
             if ( AutoRange ):
                 eMin = np.min( [eMin,np.min( energy )] )
                 eMax = np.max( [eMax,np.max( energy )] )
+                
             #  -- packing  --  #
             energy_list.append( energy )
-        colors  = [ (henergy-eMin)/(eMax-eMin) for henergy in energy_list ]
+        print( "[display__beamline]  ( eMin, eMax ) = ( {0}, {1} ) ".format( eMin, eMax ) )
+        for ik, henergy in enumerate( energy_list ):
+            henergy = (henergy-eMin)/(eMax-eMin)
+            henergy[ np.where( henergy < 0.0 ) ] = 0.0
+            henergy[ np.where( henergy > 1.0 ) ] = 1.0
+            colors.append( henergy )
         
     # ------------------------------------------------- #
     # --- [3] config Settings                       --- #
@@ -74,10 +83,10 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
     config["plt_position"]   = [0.16,0.24,0.94,0.94]
     config["xTitle"]         = "Z (m)"
     config["yTitle"]         = "R (m)"
-    config["plt_xAutoRange"] = True
-    config["plt_yAutoRange"] = True
-    config["plt_xRange"]     = [-5.0,+5.0]
-    config["plt_yRange"]     = [-5.0,+5.0]
+    config["plt_xAutoRange"] = False
+    config["plt_yAutoRange"] = False
+    config["plt_xRange"]     = [-0.5,+3.0]
+    config["plt_yRange"]     = [-0.000,+0.020]
     config["plt_linewidth"]  = 0.2
     config["xMajor_Nticks"]  = 8
     config["yMajor_Nticks"]  = 3
@@ -89,7 +98,7 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
     for ik, num in enumerate( FileList ):
         Data  = lpf.load__pointFile( inpFile=inpFile.format( num ) )
         if ( colormode in ["energy"] ):
-            fig.add__colorline( xAxis=Data[:,z_], yAxis=Data[:,x_], color=colors[ik] )
+            fig.add__colorline( xAxis=Data[:,z_], yAxis=Data[:,x_], color=colors[ik], cmap="jet" )
         else:
             fig.add__plot     ( xAxis=Data[:,z_], yAxis=Data[:,x_], color=colors[ik] )
     fig.set__axis()
@@ -101,33 +110,3 @@ def display__beamline( color="blue", colormode="energy", eRange=None ):
 # ======================================== #
 if ( __name__=="__main__" ):
     display__beamline()
-
-
-
-
-
-# # ========================================================= #
-# # ===  define__colors                                   === #
-# # ========================================================= #
-
-# def define__colors( colormode="energy", Data=None, num=0, EMax=None, color="royalblue" ):
-
-#     import matplotlib.pyplot as plt
-#     colors = ( plt.cm.get_cmap() )
-        
-#     if   ( colormode == "single" ):
-#         ret = color
-#     elif ( colormode == "random" ):
-#         ret = colors( num/255.0 )
-#     elif ( colormode == "energy" ):
-#         #  -- energy --  #
-#         beta   = np.sqrt( Data[:,vx_]**2 + Data[:,vy_]**2 + Data[:,vz_]**2 ) / const["cv"]
-#         gamma  = 1.0 / ( np.sqrt( 1.0 - beta**2 ) )
-#         energy = ( gamma - 1.0 ) * const["mp"] * const["cv"]**2 / np.abs( const["qe"] ) / MeV
-#         if ( EMax is None ):
-#             EMax = np.max( energy )
-#         #  -- normalize  -- #
-#         ret = colors( energy/EMax )
-#     return( ret )
-
-

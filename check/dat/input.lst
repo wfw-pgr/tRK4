@@ -1,0 +1,30 @@
+&parameters
+EFieldListFile           = "dat/efieldlist.dat"
+BFieldListFile           = "dat/bfieldlist.dat"
+EFieldParamFile          = "dat/efieldparam.dat"
+BFieldParamFile          = "dat/bfieldparam.dat"
+particleFile             = "dat/particles.dat"
+popoutFile               = "dat/popout.dat"
+probeFileBase            = "prb/probe"
+bpmFile                  = "bpm/screen_bpm.dat"
+flag__axisymmetry        = True
+flag__popoutBoundary     = False
+flag__probeField         = True
+flag__beamposmonitor     = False
+type__iterMax            = "load"
+type__dt                 = "load"
+iterMax                  = 1000000
+dt                       = 2e-14
+alpha_wci                = 1e-05
+alpha_CFL                = 0.01
+t_simuStart              = 0.0
+t_simuEnd                = 1.5e-08
+t_probeStart             = 0.0
+t_probeStep              = 1e-11
+t_probeEnd               = 1.5e-08
+bpm_direction            = "z"
+bpm_screen_pos           = 0.106176
+mp                       = 9.1093836e-31
+qe                       = 1.6021766e-19
+/   ! -- End of parameters
+

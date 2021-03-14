@@ -1,0 +1,7 @@
+# fieldname ZTT Q U twt_ID	main/sub	amplitude_coef
+dat/efield_regular_opened.dat		30.585e6	13950.1	0.0013767	1	0	1.0830951	10.463429
+dat/efield_regular_closed.dat		30.583e6	13950.1	0.0016150	1	1	1.0		9.688368
+dat/efield_buncher1_opened.dat		14.190e6	9810.57 0.0014391	2	0	1.0511549
+dat/efield_buncher1_closed.dat		14.189e6	9810.56	0.0015901	2	1	1.0		
+dat/efield_buncher2_opened.dat		26.430e6	12958.7 0.0013565	3	0	1.0760948
+dat/efield_buncher2_closed.dat		26.429e6	12958.7 0.0015708	3	1	1.0

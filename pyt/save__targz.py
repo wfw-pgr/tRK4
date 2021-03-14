@@ -1,7 +1,7 @@
 import datetime
 import subprocess
 
-dlist   = [ "src", "pyt", "dat" ]
+dlist   = [ "src", "pyt", "dat", "go.py", "README" ]
 name    = "tRk4"
 
 name    = name + str( datetime.date.today() ).replace( "-", "" )

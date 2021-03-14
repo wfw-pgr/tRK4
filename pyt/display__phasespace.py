@@ -21,7 +21,7 @@ def display__phasespace():
     cnsFile = "dat/parameter.conf"
     import nkUtilities.load__constants as lcn
     const = lcn.load__constants( inpFile=cnsFile )
-
+    
     #  -- [2-2]  load data & energy calculation      -- #
     inpFile = "prb/collected.dat"
     with open( inpFile, "r" ) as f:
@@ -34,8 +34,9 @@ def display__phasespace():
     # --- [3] ploting                               --- #
     # ------------------------------------------------- #
     #  -- [3-1]  settings                           --  #
-    pngFile    = "png/phasespace_{0}.png"
-    config     = lcf.load__config()
+    pngFile                  = "png/phasespace_{0}.png"
+    config                   = lcf.load__config()
+    config["FigSize"]        = (5,5)
     config["plt_marker"]     = "o"
     config["plt_markersize"] = 0.3
     config["plt_linewidth"]  = 0.0

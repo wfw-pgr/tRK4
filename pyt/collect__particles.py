@@ -37,20 +37,19 @@ def collect__particles( target=None, pos=None ):
     import nkUtilities.load__constants as lcn
     gconst  = lcn.load__constants( inpFile=cnsFile )
 
-    cnsFile = "dat/particle.conf"
-    import nkUtilities.load__constants as lcn
-    pconst  = lcn.load__constants( inpFile=cnsFile )
-    
     # ------------------------------------------------- #
     # --- [2] collect particles                     --- #
     # ------------------------------------------------- #
 
     nCmp        = 14
-    ret         = np.zeros( (pconst["npt"],nCmp) )
+    import select__particles as sel
+    selected    = sel.load__selected()
+    npt         = selected.shape[0]
+    ret         = np.zeros( (npt,nCmp) )
     
-    for ip in range( pconst["npt"] ):
+    for ip,iS in enumerate( selected ):
         
-        prbFile   = "prb/probe{0:06}.dat".format( ip+1 )
+        prbFile   = "prb/probe{0:06}.dat".format( iS )
         Data      = np.loadtxt( prbFile )
         axis      = np.ravel( Data[:,target] )
         idx       = np.argmin( np.abs( axis - pos ) )
@@ -68,7 +67,7 @@ def collect__particles( target=None, pos=None ):
             ret[ip,:] = p1*Data[idx-1,:] + p2*Data[idx  ,:]
 
         elif ( ( axis[idx  ] <= pos ) and ( pos <= axis[idx+1] ) ):
-            t1, t2    = timearray[idx], timearray[idx+1]
+            t1, t2    = axis[idx  ], axis[idx+1]
             p1, p2    = ( t2-pos ) / ( t2-t1 ), ( pos-t1 ) / ( t2-t1 )
             ret[ip,:] = p1*Data[idx  ,:] + p2*Data[idx+1,:]
             
