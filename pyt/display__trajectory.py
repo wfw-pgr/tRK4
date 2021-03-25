@@ -23,7 +23,8 @@ def display__trajectory( nums=None, plain=None ):
         nums  = spf.load__selected()
     
     if ( plain is None ):
-        print( "[trajectory__tx] please input plain (xy/yx/yz/zy/zx/xz/) >> ( e.g. :: xy    )" )
+        print( "[trajectory__tx] please input plain (xy/yx/yz/zy/zx/xz/) ( e.g. :: xy ) >> ", \
+               end="" )
         plain = input()
         
     if ( not( plain.lower() in ["xy","yz","zx","yx","zy","xz"] ) ):
@@ -84,8 +85,48 @@ def display__trajectory( nums=None, plain=None ):
         fig.add__plot( xAxis=xAxis, yAxis=yAxis, color=colors[ik] )
     fig.set__axis()
     fig.save__figure()
+
+
     
+# ========================================================= #
+# ===  display__trajectory3d                            === #
+# ========================================================= #
+
+def display__trajectory3d():
+
+    x_,y_,z_ = 1, 2, 3
     
+    # ------------------------------------------------- #
+    # --- [1] preparation                           --- #
+    # ------------------------------------------------- #
+    
+    import matplotlib.pyplot  as plt
+    from mpl_toolkits.mplot3d import Axes3D
+
+    import select__particles as sel
+    selected  = sel.load__selected()
+    npt       = selected.shape[0]
+
+    inpFile   = "prb/probe{0:06}.dat"
+    pngFile   = "png/trajectory3d.png"
+
+    # ------------------------------------------------- #
+    # --- [2] plot 3d graph                         --- #
+    # ------------------------------------------------- #
+
+    fig = plt.figure( figsize=(8,6) )
+    ax  = fig.add_subplot( 111, projection="3d" )
+
+    for ik,ipt in enumerate( selected ):
+        # -- load data -- #
+        Data = lpf.load__pointFile( inpFile=inpFile.format( ipt ), returnType="point" )
+        # -- plot data -- #
+        ax.plot( Data[:,x_], Data[:,y_], Data[:,z_] )
+
+    fig.savefig( pngFile )
+    print( "[display__trajectory3d.py] output :: {0} ".format( pngFile ) )
+    
+
 # ========================================================= #
 # ===   実行部                                          === #
 # ========================================================= #
@@ -95,4 +136,5 @@ if ( __name__=="__main__" ):
     args  = gar.genArgs()
     nums  = args["array"]
     plain = args["key"]
-    display__trajectory( nums=nums, plain=plain )
+    display__trajectory  ( nums=nums, plain=plain )
+    display__trajectory3d()

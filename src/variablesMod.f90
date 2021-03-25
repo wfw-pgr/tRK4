@@ -60,6 +60,7 @@ module variablesMod
   double precision              :: t_nextProbe, t_probeStart, t_probeStep, t_probeEnd
 
   logical                       :: flag__relativisticVelocity = .false.
+  logical                       :: flag__all_particle_popout  = .false.
   
   integer         , parameter   :: xp_=1, yp_=2, zp_=3, vx_=4 , vy_=5 , vz_=6
   integer         , parameter   :: xo_=7, yo_=8, zo_=9, ux_=10, uy_=11, uz_=12, wt_=13

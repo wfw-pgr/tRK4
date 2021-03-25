@@ -35,7 +35,7 @@ contains
   subroutine pBoundary__popout
     use variablesMod
     implicit none
-    integer       :: ipt
+    integer       :: ipt, nSurviving
     logical, save :: flag__initFileMake = .true.
 
     ! ------------------------------------------------------ !
@@ -45,53 +45,99 @@ contains
        open(lun,file=trim(popoutFile),form="formatted",status="replace")
        write(lun,*) "# ipt, pxv "
        close(lun)
+       flag__all_particle_popout = .false.
     endif
     
     ! ------------------------------------------------------ !
     ! --- [2] popout boundary check                      --- !
     ! ------------------------------------------------------ !
-    
-    do ipt=1, npt
-       if ( pxv(wt_,ipt).gt.0.d0 ) then
-          ! ------------------------------------------------------ !
-          ! --- [2-1] x-boundary popout                        --- !
-          ! ------------------------------------------------------ !
-          if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).gt.xMax ) ) then
-             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             open (lun,file=trim(popoutFile),form="formatted",position="append")
-             write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             close(lun)
-             pxv(wt_,ipt) = 0.d0
-          endif
-          ! ------------------------------------------------------ !
-          ! --- [2-2] z-boundary popout                        --- !
-          ! ------------------------------------------------------ !
-          if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).gt.zMax ) ) then
-             write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             open (lun,file=trim(popoutFile),form="formatted",position="append")
-             write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
-             close(lun)
-             pxv(wt_,ipt) = 0.d0
-          endif
-       endif
-    enddo
-    if ( flag__axisymmetry.eqv..false. ) then
-       ! ------------------------------------------------------ !
-       ! --- [2-3] y-boundary popout                        --- !
-       ! ------------------------------------------------------ !
-       if ( ( pxv(yp_,ipt).lt.yMin ).or.( pxv(yp_,ipt).gt.yMax ) ) then
-          write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
-          open (lun,file=trim(popoutFile),form="formatted",position="append")
-          write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
-          close(lun)
-          pxv(wt_,ipt) = 0.d0
-       endif
-    endif
 
+    nSurviving = 0
+
+    if ( flag__axisymmetry.eqv..false. ) then
+       ! -- target :: ( x,y,z ) -- #
+       
+       do ipt=1, npt
+          if ( pxv(wt_,ipt).gt.0.d0 ) then
+
+             nSurviving = nSurviving + 1
+             
+             ! ------------------------------------------------------ !
+             ! --- [2-1] x-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).gt.xMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open (lun,file=trim(popoutFile),form="formatted",position="append")
+                write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+             ! ------------------------------------------------------ !
+             ! --- [2-2] y-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(yp_,ipt).lt.yMin ).or.( pxv(yp_,ipt).gt.yMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open (lun,file=trim(popoutFile),form="formatted",position="append")
+                write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+             ! ------------------------------------------------------ !
+             ! --- [2-3] z-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).gt.zMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open (lun,file=trim(popoutFile),form="formatted",position="append")
+                write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+          endif
+       end do
+
+    else
+       ! -- target :: ( x,z )   -- #
+       
+       do ipt=1, npt
+          if ( pxv(wt_,ipt).gt.0.d0 ) then
+
+             nSurviving = nSurviving + 1
+
+             ! ------------------------------------------------------ !
+             ! --- [2-4] x-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(xp_,ipt).lt.xMin ).or.( pxv(xp_,ipt).gt.xMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open (lun,file=trim(popoutFile),form="formatted",position="append")
+                write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+             ! ------------------------------------------------------ !
+             ! --- [2-5] z-boundary popout                        --- !
+             ! ------------------------------------------------------ !
+             if ( ( pxv(zp_,ipt).lt.zMin ).or.( pxv(zp_,ipt).gt.zMax ) ) then
+                write(6,*) "[particle__boundary] ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                open (lun,file=trim(popoutFile),form="formatted",position="append")
+                write(lun,*) "ipt = ", ipt, " pxv = ", pxv(:,ipt)
+                close(lun)
+                pxv(wt_,ipt) = 0.d0
+             endif
+          endif
+       end do
+    end if
+
+    ! ------------------------------------------------------ !
+    ! --- [3] number of surviving particle check         --- !
+    ! ------------------------------------------------------ !
+    if ( nSurviving.eq.0 ) then
+       flag__all_particle_popout = .true.
+    endif
+    
     return
   end subroutine pBoundary__popout
-  
-  
+
+
   ! ====================================================== !
   ! === periodic Boundary condition in z               === !
   ! ====================================================== !

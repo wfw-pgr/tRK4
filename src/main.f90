@@ -50,7 +50,7 @@ program main
         call show__progressBar( iter, iterMax )
      endif
      
-     ! -- [2-2] field solver                           --  !
+     !  -- [2-2] field solver                          --  !
      call modulate__ebfields
      
      !  -- [2-3] step forward particle info.           --  !
@@ -67,6 +67,9 @@ program main
      if ( flag__beamposmonitor ) then
         call screen__beamPosMonitor( bpm_direction, bpm_screen_pos )
      endif
+
+     !  -- [2-6] check all popout boundary             --  !
+     if ( flag__all_particle_popout ) exit
      
   enddo
   write(6,"(a)")
