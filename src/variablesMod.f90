@@ -67,27 +67,6 @@ module variablesMod
   integer         , parameter   :: ex_=1, ey_=2, ez_=3, bx_=4 , by_=5 , bz_=6
   integer         , parameter   :: fx_=4, fy_=5, fz_=6
 
-  
-
 end module variablesMod
 
 
-  ! double precision, allocatable :: EBf(:,:,:,:)
-  ! double precision, allocatable :: Em1(:,:,:,:), Em2(:,:,:,:)
-  ! integer         , allocatable :: period_counter(:)
-  ! double precision, allocatable :: pxvbuff(:,:,:), probeBuff(:,:,:)
-  ! character(cLen)               :: EFieldFile, type__EFieldFile
-  ! character(cLen)               :: BFieldFile, type__BFieldFile
-  ! character(cLen)               :: twEigenFile1, twEigenFile2
-  ! character(cLen)               :: trackFileBase, probeFileBase
-  ! logical                       :: flag__EField
-  ! logical                       :: flag__BField
-  ! logical                       :: flag__cyclicCoordinate
-  ! logical                       :: flag__standingWave
-  ! logical                       :: flag__travellingWave
-  ! logical                       :: flag__saveParticle
-  ! character(cLen)               :: FieldBoundary__x, FieldBoundary__y, FieldBoundary__z
-  ! double precision              :: freq, phase_delay
-  ! double precision              :: efield_factor, bfield_factor
-  ! double precision              :: t_nextSave , t_trackStart, t_trackStep, t_trackEnd
-  ! logical                       :: flag__BoundaryMessage      = .true.
