@@ -6,3 +6,5 @@ prb/*.dat
 src/*.mod
 src/*.o
 sav/*
+*.pyc
+*/__pycache__/*
