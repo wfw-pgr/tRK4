@@ -126,7 +126,7 @@ def display__trajectory3d():
         ax.plot( Data[:,x_], Data[:,y_], Data[:,z_] )
 
     fig.savefig( pngFile )
-    print( "[display__trajectory3d.py] output :: {0} ".format( pngFile ) )
+    print( "[display__trajectory3d.py] out :: {0} ".format( pngFile ) )
     
 
 # ========================================================= #

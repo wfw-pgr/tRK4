@@ -3,7 +3,7 @@ sav/*
 job/*
 png/*.png
 png/*.vts
-png/*
+dat/*.dat
 bpm/*.dat
 prb/*.dat
 src/*.mod
