@@ -95,6 +95,16 @@ def generate__particleSample():
     Data[:,vz_] = abs_vel[:] * rz[:]
 
     # ------------------------------------------------- #
+    # --- [4] rotate coordinate axis                --- #
+    # ------------------------------------------------- #
+    if ( const["coord.rot.sw"] ):
+        import nkBasicAlgs.rotate__vector as rot
+        vxyz = np.copy( Data[:,vx_:vz_+1] )
+        ret  = rot.rotate__vector( points=vxyz, theta=const["coord.rot.theta"], \
+                                   degree=True, nvec =const["coord.rot.axis"] )
+        Data[:,vx_:vz_+1] = np.copy( ret )
+    
+    # ------------------------------------------------- #
     # --- [2] save in outFile                       --- #
     # ------------------------------------------------- #
     outFile = "dat/particles.dat"

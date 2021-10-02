@@ -23,9 +23,11 @@ def display__trajectory( nums=None, plain=None ):
         nums  = spf.load__selected()
     
     if ( plain is None ):
-        print( "[trajectory__tx] please input plain (xy/yx/yz/zy/zx/xz/) ( e.g. :: xy ) >> ", \
+        print( "[trajectory__tx] please input plain (xy/yx/yz/zy/zx/xz/) ( default :: xy ) >> ",\
                end="" )
         plain = input()
+    if ( len( plain ) == 0 ):
+        plain = "xy"
         
     if ( not( plain.lower() in ["xy","yz","zx","yx","zy","xz"] ) ):
         print( "[trajectory__tx] plain != (xy/yx/yz/zy/zx/xz/)  [ERROR] " )
@@ -108,7 +110,7 @@ def display__trajectory3d():
     npt       = selected.shape[0]
 
     inpFile   = "prb/probe{0:06}.dat"
-    pngFile   = "png/trajectory3d.png"
+    pngFile   = "png/trajectory__3d.png"
 
     # ------------------------------------------------- #
     # --- [2] plot 3d graph                         --- #
